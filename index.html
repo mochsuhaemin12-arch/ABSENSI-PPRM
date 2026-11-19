@@ -69,7 +69,6 @@ details.pn div{padding:3px 0;font-size:13px}
 <main class="g"><div class="in" id="m"></div></main>
 <div id="t" role="status"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const ACTS=['Pengajian Jumat','Ziarah Maqbarah','Pengajian Selasa','Pembinaan Al-Qur’an'];
 const ST={hadir:'Hadir',izin:'Izin',sakit:'Sakit',alfa:'Alfa'};
@@ -94,7 +93,7 @@ const av=(s,z)=>s.foto?`<span class=av style="width:${z}px;height:${z}px"><img s
 /* ---------- tulis ke database ---------- */
 const errMsg=e=>{const c=e&&e.code;return c=='quota_exceeded'?'Penyimpanan database penuh':c=='resource_exhausted'?'Terlalu cepat, coba lagi sebentar':c=='invalid_argument'?'Akun ini tidak punya izin mengubah data':c=='revoked'?'Akses ke halaman ini sudah dicabut':'Gagal menyimpan, periksa koneksi'};
 async function W(fn,ok){
- if(!DB){toast('Belum tersambung ke database. Muat ulang halaman dan masuk kembali.');return false}
+ if(!DB){toast('Belum tersambung. Buka halaman ini lewat claude.ai dengan akun yang sudah diundang.');return false}
  if(!canW){toast('Akun ini hanya bisa melihat data, tidak bisa mengubah');return false}
  try{await fn();if(ok)toast(ok);return true}catch(e){if(e&&e.code=='invalid_argument'&&canNull){canW=false;setConn('ro')}toast('⚠ '+errMsg(e));return false}
 }
@@ -132,8 +131,8 @@ function brand(){
  h.innerHTML=(s.logo?`<img src="${s.logo}" alt="">`:'')+`<div><h1>${esc(s.nama)}</h1><small>${esc(s.sub)}</small></div><span class=chip>${label}</span>`;
  document.title=s.nama;
  const b=$('#bn'),t=$('#bnt');
- if(!DB){b.hidden=false;t.textContent='Belum tersambung ke database. Muat ulang halaman dan masuk kembali.'}
- else if(!canW){b.hidden=false;t.textContent='Akun ini hanya bisa melihat. Hubungi admin.'}
+ if(!DB){b.hidden=false;t.textContent='Data hanya bisa dibaca dan disimpan bila halaman ini dibuka lewat claude.ai dengan akun yang sudah diundang.'}
+ else if(!canW){b.hidden=false;t.textContent='Akun ini hanya bisa melihat. Minta pemilik halaman mengubah akses Anda menjadi Contributor atau Editor.'}
  else if(conn=='slow'){b.hidden=false;t.textContent='Database belum bisa dijangkau. Data yang tampil mungkin belum yang terbaru.'}
  else b.hidden=true;
 }
@@ -225,7 +224,7 @@ function stu(){
  $('#fx').onchange=async ev=>{const inp=ev.target,f=inp.files&&inp.files[0];if(!f)return;const say=t=>{$('#hasil').textContent=t};
   try{
    say('Membaca file '+f.name+'…');
-   if(!DB)throw new Error('Belum tersambung ke database. Muat ulang halaman dan masuk kembali.');
+   if(!DB)throw new Error('Belum tersambung ke database. Buka halaman ini lewat claude.ai dengan akun yang diundang.');
    if(!canW)throw new Error('Akun ini hanya bisa melihat, tidak bisa mengubah data');
    await needXLSX();
    const buf=await readBuf(f);
@@ -331,50 +330,6 @@ function bak(){
    try{const o=JSON.parse(r.result);$('#hasil').textContent='Memulihkan data…';const x=await restore(o);$('#hasil').textContent='✔ Selesai. '+x.total+' data diproses'+(x.fail?', gagal: '+x.fail:'')}catch(e){$('#hasil').textContent='⚠ File cadangan tidak valid'}};
   r.readAsText(f);ev.target.value=''};
 }
-
-/* ---------- sambungan Supabase ---------- */
-const SUPABASE_URL='ISI_PROJECT_URL_DI_SINI';      // contoh: https://abcdxyz.supabase.co
-const SUPABASE_KEY='ISI_ANON_PUBLIC_KEY_DI_SINI';  // kunci "anon public" (aman dipublikasikan, dijaga RLS)
-const T='docs',fail=e=>{const x=new Error(e.message);x.code=e.code=='42501'?'invalid_argument':e.code;return x};
-function makeDB(sb){
-  const dsnap=(path,row)=>({exists:!!row,id:path.split('/').pop(),data:()=>row?row.data:undefined});
-  const doc=path=>({
-    async set(d){const{error}=await sb.from(T).upsert({path,data:d,updated_at:new Date().toISOString()});if(error)throw fail(error)},
-    async update(d){const{error}=await sb.rpc('merge_doc',{p_path:path,p_patch:d});if(error)throw fail(error)},
-    async delete(){const{error}=await sb.from(T).delete().eq('path',path);if(error)throw fail(error)},
-    onSnapshot(cb,err){
-      const load=async()=>{const{data,error}=await sb.from(T).select('path,data').eq('path',path).maybeSingle();error?err&&err(fail(error)):cb(dsnap(path,data))};
-      load();sb.channel('d:'+path).on('postgres_changes',{event:'*',schema:'public',table:T,filter:'path=eq.'+path},load).subscribe();
-    }
-  });
-  const collection=name=>({
-    onSnapshot(cb,err){
-      const pre=name+'/',rows=new Map(),emit=()=>cb({docs:[...rows.values()].map(r=>({id:r.path.slice(pre.length),data:()=>r.data}))});
-      (async()=>{
-        for(let f=0;;f+=1000){
-          const{data,error}=await sb.from(T).select('path,data').like('path',pre+'%').order('path').range(f,f+999);
-          if(error)return err&&err(fail(error));
-          data.forEach(r=>rows.set(r.path,r));if(data.length<1000)break;
-        }
-        emit();
-      })();
-      sb.channel('c:'+name).on('postgres_changes',{event:'*',schema:'public',table:T},pl=>{
-        const r=pl.eventType=='DELETE'?pl.old:pl.new;if(!r||!String(r.path).startsWith(pre))return;
-        pl.eventType=='DELETE'?rows.delete(r.path):rows.set(r.path,r);emit();
-      }).subscribe();
-    }
-  });
-  return{doc,collection};
-}
-function loginUI(sb){
-  return new Promise(ok=>{
-    M.innerHTML=`<h3>Masuk</h3><div class=pn><form id=lf><p>Masuk dengan akun yang dibuat oleh admin.</p><p><input id=le type=email placeholder="Email" required autocomplete=username style="width:100%;padding:9px"></p><p><input id=lp type=password placeholder="Kata sandi" required autocomplete=current-password style="width:100%;padding:9px"></p><div id=lm class=note></div><button>Masuk</button></form></div>`;
-    $('#lf').onsubmit=async ev=>{ev.preventDefault();$('#lm').textContent='Memeriksa…';
-      const{error}=await sb.auth.signInWithPassword({email:$('#le').value.trim(),password:$('#lp').value});
-      if(error)$('#lm').textContent='⚠ Email atau kata sandi salah';else ok()};
-  });
-}
-function keluarBtn(sb){const b=document.createElement('button');b.className='s';b.textContent='Keluar';b.style.cssText='position:fixed;top:8px;right:8px;z-index:9';b.onclick=async()=>{await sb.auth.signOut();location.reload()};document.body.appendChild(b)}
 
 /* ---------- mulai ---------- */
 (async()=>{
