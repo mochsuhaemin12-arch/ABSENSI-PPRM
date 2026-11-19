@@ -333,8 +333,8 @@ function bak(){
 }
 
 /* ---------- sambungan Supabase ---------- */
-const SUPABASE_URL='https://ptoupxetorhkdasfeykv.supabase.co';      // contoh: https://abcdxyz.supabase.co
-const SUPABASE_KEY='sb_publishable_iut8gQMgN9D7o04r2BwNcQ_uqrnQjTD';  // kunci "anon public" (aman dipublikasikan, dijaga RLS)
+const SUPABASE_URL = 'https://ptoupxetorhkdasfeykv.supabase.co';
+const SUPABASE_KEY = 'KUNCI_SUPABASE_ANDA';
 const T='docs',fail=e=>{const x=new Error(e.message);x.code=e.code=='42501'?'invalid_argument':e.code;return x};
 function makeDB(sb){
   const dsnap=(path,row)=>({exists:!!row,id:path.split('/').pop(),data:()=>row?row.data:undefined});
