@@ -69,6 +69,7 @@ details.pn div{padding:3px 0;font-size:13px}
 <main class="g"><div class="in" id="m"></div></main>
 <div id="t" role="status"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const ACTS=['Pengajian Jumat','Ziarah Maqbarah','Pengajian Selasa','Pembinaan Al-Qur’an'];
 const ST={hadir:'Hadir',izin:'Izin',sakit:'Sakit',alfa:'Alfa'};
@@ -93,11 +94,13 @@ const av=(s,z)=>s.foto?`<span class=av style="width:${z}px;height:${z}px"><img s
 /* ---------- tulis ke database ---------- */
 const errMsg=e=>{const c=e&&e.code;return c=='quota_exceeded'?'Penyimpanan database penuh':c=='resource_exhausted'?'Terlalu cepat, coba lagi sebentar':c=='invalid_argument'?'Akun ini tidak punya izin mengubah data':c=='revoked'?'Akses ke halaman ini sudah dicabut':'Gagal menyimpan, periksa koneksi'};
 async function W(fn,ok){
- if(!DB){toast('Belum tersambung. Buka halaman ini lewat claude.ai dengan akun yang sudah diundang.');return false}
+ if(!DB){toast('Belum tersambung ke database. Muat ulang halaman dan masuk kembali.');return false}
  if(!canW){toast('Akun ini hanya bisa melihat data, tidak bisa mengubah');return false}
  try{await fn();if(ok)toast(ok);return true}catch(e){if(e&&e.code=='invalid_argument'&&canNull){canW=false;setConn('ro')}toast('⚠ '+errMsg(e));return false}
 }
 async function pool(items,n,fn){let i=0,fail=0;await Promise.all(Array.from({length:Math.min(n,items.length)},async()=>{while(i<items.length){const x=items[i++];try{await fn(x)}catch(e){fail++}}}));return fail}
+const readBuf=f=>f.arrayBuffer?f.arrayBuffer():new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(new Error('File tidak bisa dibaca'));r.readAsArrayBuffer(f)});
+const needXLSX=()=>typeof XLSX!=='undefined'?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('Pustaka Excel gagal dimuat, periksa internet lalu coba lagi'));document.head.appendChild(s)});
 const putStudent=s=>DB.doc('students/'+seg(s.id)).set(clean(s));
 async function delStudent(id){
  await DB.doc('students/'+seg(id)).delete();const k=seg(id);
@@ -129,8 +132,8 @@ function brand(){
  h.innerHTML=(s.logo?`<img src="${s.logo}" alt="">`:'')+`<div><h1>${esc(s.nama)}</h1><small>${esc(s.sub)}</small></div><span class=chip>${label}</span>`;
  document.title=s.nama;
  const b=$('#bn'),t=$('#bnt');
- if(!DB){b.hidden=false;t.textContent='Data hanya bisa dibaca dan disimpan bila halaman ini dibuka lewat claude.ai dengan akun yang sudah diundang.'}
- else if(!canW){b.hidden=false;t.textContent='Akun ini hanya bisa melihat. Minta pemilik halaman mengubah akses Anda menjadi Contributor atau Editor.'}
+ if(!DB){b.hidden=false;t.textContent='Belum tersambung ke database. Muat ulang halaman dan masuk kembali.'}
+ else if(!canW){b.hidden=false;t.textContent='Akun ini hanya bisa melihat. Hubungi admin.'}
  else if(conn=='slow'){b.hidden=false;t.textContent='Database belum bisa dijangkau. Data yang tampil mungkin belum yang terbaru.'}
  else b.hidden=true;
 }
@@ -201,7 +204,7 @@ function sta(){
 function stu(){
  ph=null;const e=edit?S.students.find(s=>String(s.id)==String(edit))||{}:{};
  M.innerHTML=`<form id=f class=mf><label class=lb>ID PPRM<input id=fi name=id placeholder="ID PPRM" value="${esc(e.id)}" ${edit?'readonly':''} required></label><label class=lb>Nama lengkap<input id=fn name=nama value="${esc(e.nama)}" required></label><label class=lb>Alamat<input id=fa name=alamat value="${esc(e.alamat)}"></label><label class=lb>Domisili<input id=fd name=dom value="${esc(e.dom)}"></label><label class=lb>Kelas Madin<input id=fm name=madin value="${esc(e.madin)}"></label><label class=lb>Kelas Formal<input id=ff name=formal value="${esc(e.formal)}"></label><label class=lb>Foto<input type=file id=ft accept="image/*"></label><span id=fp>${e.foto?av(e,40):''}</span><div class=row><button>${edit?'Simpan perubahan':'+ Tambah santri'}</button>${edit?'<button type=button class=s id=cx>Batal</button>':''}</div></form>
- <div class=row><input id=q placeholder="Cari ID / nama"><button class=s id=bf>📷 Impor foto massal</button><input type=file id=fb accept="image/*" multiple hidden><button id=im>⬆ Impor dari Excel</button><input type=file id=fx accept=".xlsx,.xls,.csv" hidden></div><div id=hasil class=note></div><div class=w id=tb></div>`;
+ <div class=row><input id=q placeholder="Cari ID / nama"><button class=s id=bf>📷 Impor foto massal</button><input type=file id=fb accept="image/*" multiple hidden><button id=im>⬆ Impor dari Excel</button><button class=s id=tp>⬇ Templat Excel</button><input type=file id=fx accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden></div><div id=hasil class=note></div><div class=w id=tb></div>`;
  $('#f').onsubmit=async ev=>{ev.preventDefault();const o=Object.fromEntries(new FormData(ev.target));o.id=o.id.trim();if(!o.id)return;
   if(ph)o.foto=ph;
   let ok;
@@ -212,27 +215,44 @@ function stu(){
  if(edit)$('#cx').onclick=()=>{edit=null;stu()};
  $('#ft').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{ph=await shrink(f,160,'image/jpeg',.7);$('#fp').innerHTML=av({foto:ph},40)}catch(x){toast('Foto tidak bisa dibaca')}};
  const draw=()=>{const q=$('#q').value.toLowerCase(),r=S.students.filter(s=>!q||String(s.nama).toLowerCase().includes(q)||String(s.id).includes(q));
-  $('#tb').innerHTML=`<table><tr><th>Foto</th><th>ID PPRM</th><th>Nama Lengkap</th><th>Alamat</th><th>Domisili</th><th>Kelas Madin</th><th>Kelas Formal</th><th>Status</th><th></th></tr>${r.map(s=>`<tr><td>${av(s,32)}</td><td>${esc(s.id)}</td><td>${esc(s.nama)}</td><td>${esc(s.alamat)}</td><td>${esc(s.dom)}</td><td>${esc(s.madin)}</td><td>${esc(s.formal)}</td><td>${s.active?'Aktif':'Nonaktif'}</td><td style="white-space:nowrap"><button class=s data-e="${esc(s.id)}">Edit</button> <button class=s data-t="${esc(s.id)}">${s.active?'Nonaktifkan':'Aktifkan'}</button> <button class=d data-x="${esc(s.id)}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=9 class=note>Belum ada santri. Tambahkan lewat formulir atau impor dari Excel.</td></tr>'}</table>`};
+  $('#tb').innerHTML=`<table><tr><th>Foto</th><th>ID PPRM</th><th>Nama Lengkap</th><th>Alamat</th><th>Domisili</th><th>Kelas Madin</th><th>Kelas Formal</th><th>Keterangan</th><th>Status</th><th></th></tr>${r.map(s=>`<tr><td>${av(s,32)}</td><td>${esc(s.id)}</td><td>${esc(s.nama)}</td><td>${esc(s.alamat)}</td><td>${esc(s.dom)}</td><td>${esc(s.madin)}</td><td>${esc(s.formal)}</td><td>${esc(s.ket)}</td><td>${s.active?'Aktif':'Nonaktif'}</td><td style="white-space:nowrap"><button class=s data-e="${esc(s.id)}">Edit</button> <button class=s data-t="${esc(s.id)}">${s.active?'Nonaktifkan':'Aktifkan'}</button> <button class=d data-x="${esc(s.id)}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=10 class=note>Belum ada santri. Tambahkan lewat formulir atau impor dari Excel.</td></tr>'}</table>`};
  draw();onData=draw;$('#q').oninput=draw;
  $('#im').onclick=()=>$('#fx').click();$('#bf').onclick=()=>$('#fb').click();
  $('#fb').onchange=async ev=>{const files=[...ev.target.files],no=[];let ok=0;
   await pool(files,3,async f=>{const id=f.name.replace(/\.[^.]+$/,'').trim(),s=S.students.find(x=>String(x.id)==id);if(!s){no.push(f.name);return}try{const foto=await shrink(f,160,'image/jpeg',.7);await putStudent({...s,foto});ok++}catch(x){no.push(f.name)}});
   $('#hasil').textContent='✔ Foto terpasang: '+ok+(no.length?' · Tidak cocok/gagal: '+no.length+' ('+no.slice(0,5).join(', ')+(no.length>5?'…':'')+')':'');ev.target.value=''};
- $('#fx').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=async()=>{let msg;try{
-   if(typeof XLSX==='undefined')throw 'Pustaka Excel belum termuat, periksa internet lalu coba lagi';
-   if(!DB||!canW)throw 'Akun ini tidak bisa mengubah data';
-   const wb=XLSX.read(rd.result,{type:'array'});const sh=wb.Sheets['Data Santri']||wb.Sheets[wb.SheetNames.find(n=>n!='Petunjuk')||wb.SheetNames[0]];
-   const rows=XLSX.utils.sheet_to_json(sh,{header:1,raw:false,defval:''});const norm=x=>String(x).toLowerCase().replace(/[^a-z]/g,'');
-   const hi=rows.findIndex(r=>r.some(c=>norm(c)=='idpprm'));if(hi<0)throw 'Kolom "ID PPRM" tidak ditemukan di baris judul';
-   const col={};rows[hi].forEach((c,i)=>{const k=norm(c);if(k=='idpprm')col.id=i;else if(k.startsWith('nama'))col.nama=i;else if(k.startsWith('alamat'))col.alamat=i;else if(k.startsWith('domisili')||k=='kamar')col.dom=i;else if(k=='kelasmadin'||k=='madin')col.madin=i;else if(k=='kelasformal'||k=='formal')col.formal=i});
-   let add=0,upd=0,skip=0;const g=(r,k)=>String(r[col[k]]??'').trim(),jobs=[];
-   rows.slice(hi+1).forEach(r=>{const o={id:g(r,'id'),nama:g(r,'nama'),alamat:g(r,'alamat'),dom:g(r,'dom'),madin:g(r,'madin'),formal:g(r,'formal')};
+ $('#tp').onclick=()=>xlsx('templat-data-santri.xlsx','Data Santri',[['ID PPRM','Nama','Alamat','Domisili','Kelas Madin','Kelas Formal','Update Status'],['2026001','Contoh Nama Santri','Surabaya','Kamar A1','Ula 1','SMP 7','aktif']],[12,28,28,16,16,16,16]);
+ $('#fx').onchange=async ev=>{const inp=ev.target,f=inp.files&&inp.files[0];if(!f)return;const say=t=>{$('#hasil').textContent=t};
+  try{
+   say('Membaca file '+f.name+'…');
+   if(!DB)throw new Error('Belum tersambung ke database. Muat ulang halaman dan masuk kembali.');
+   if(!canW)throw new Error('Akun ini hanya bisa melihat, tidak bisa mengubah data');
+   await needXLSX();
+   const buf=await readBuf(f);
+   const wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+   const norm=x=>String(x??'').toLowerCase().replace(/[^a-z]/g,'');
+   const isId=k=>['idpprm','id','idsantri','nis','nisn','noinduk','nomorinduk','nomorindukpprm'].includes(k);
+   let rows=null,hi=-1;
+   const names=[...wb.SheetNames.filter(n=>n=='Data Santri'),...wb.SheetNames.filter(n=>n!='Data Santri'&&norm(n)!='petunjuk')];
+   for(const n of names){const r=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''});const i=r.findIndex(x=>x.some(c=>isId(norm(c))));if(i>=0){rows=r;hi=i;break}}
+   if(!rows)throw new Error('Kolom "ID PPRM" tidak ditemukan di baris judul. Unduh templat Excel lalu isi sesuai kolomnya.');
+   const col={};rows[hi].forEach((c,i)=>{const k=norm(c);if(isId(k)){if(col.id==null)col.id=i}else if(k.startsWith('nama')){if(col.nama==null)col.nama=i}else if(k.startsWith('alamat'))col.alamat=i;else if(k.startsWith('domisili')||k=='kamar'||k=='asrama')col.dom=i;else if(k=='kelasmadin'||k=='madin'||k=='kelasdiniyah')col.madin=i;else if(k=='kelasformal'||k=='formal'||k=='kelassekolah')col.formal=i;else if(k=='updatestatus'||k=='keterangan'||k=='ket'||k=='status')col.ket=i});
+   if(col.nama==null)throw new Error('Kolom "Nama" tidak ditemukan di baris judul');
+   const g=(r,k)=>col[k]==null?'':String(r[col[k]]??'').trim();
+   const map=new Map();let skip=0;
+   rows.slice(hi+1).forEach(r=>{let id=g(r,'id').replace(/\.0+$/,'');const o={id,nama:g(r,'nama'),alamat:g(r,'alamat'),dom:g(r,'dom'),madin:g(r,'madin'),formal:g(r,'formal'),ket:g(r,'ket')};
     if(!o.id||!o.nama){if(r.some(c=>String(c).trim()))skip++;return}
-    const ex=S.students.find(s=>String(s.id)==o.id);if(ex){jobs.push({...ex,...o});upd++}else{jobs.push({...o,active:true});add++}});
-   $('#hasil').textContent='Menyimpan '+jobs.length+' santri…';
-   const fail=await pool(jobs,4,putStudent);
-   msg='✔ Impor selesai. Ditambah: '+add+' · Diperbarui: '+upd+' · Dilewati: '+skip+(fail?' · Gagal simpan: '+fail:'')}catch(x){msg='⚠ Gagal membaca file: '+x}
-   $('#hasil').textContent=msg};rd.readAsArrayBuffer(f);ev.target.value=''};
+    map.set(o.id,o)});
+   let add=0,upd=0;const jobs=[];
+   map.forEach(o=>{const ex=S.students.find(s=>String(s.id)==o.id);
+    if(ex){const m={...ex};['nama','alamat','dom','madin','formal','ket'].forEach(k=>{if(col[k]!=null)m[k]=o[k]});jobs.push(m);upd++}else{jobs.push({...o,active:true});add++}});
+   if(!jobs.length)throw new Error('Tidak ada baris data yang valid (ID PPRM dan Nama wajib diisi)');
+   let done=0,fail=0,lastErr='';
+   const put=async s=>{for(let t=0;t<4;t++){try{await putStudent(s);return}catch(e){lastErr=e;if(t==3)throw e;await new Promise(r=>setTimeout(r,500*(t+1)))}}};
+   await pool(jobs,3,async s=>{try{await put(s)}catch(e){fail++}done++;if(done%5==0||done==jobs.length)say('Menyimpan '+done+' / '+jobs.length+' santri…')});
+   say((fail?'⚠ ':'✔ ')+'Impor selesai. Ditambah: '+add+' · Diperbarui: '+upd+' · Dilewati: '+skip+(fail?' · Gagal simpan: '+fail+' ('+errMsg(lastErr)+')':''));
+  }catch(x){say('⚠ Gagal impor: '+(x&&x.message||x))}
+  finally{try{inp.value=''}catch(e){}}};
  $('#tb').onclick=async ev=>{const b=ev.target.dataset,id=b.e||b.t||b.x,s=S.students.find(x=>String(x.id)==id);if(!s)return;
   if(b.e){edit=s.id;stu()}else if(b.t){W(()=>putStudent({...s,active:!s.active}))}
   else if(sure(ev.target,'Yakin hapus?')){W(()=>delStudent(s.id),'Santri dihapus')}};
@@ -312,15 +332,62 @@ function bak(){
   r.readAsText(f);ev.target.value=''};
 }
 
+/* ---------- sambungan Supabase ---------- */
+const SUPABASE_URL='https://ptoupxetorhkdasfeykv.supabase.co';      // contoh: https://abcdxyz.supabase.co
+const SUPABASE_KEY='sb_publishable_iut8gQMgN9D7o04r2BwNcQ_uqrnQjTD';  // kunci "anon public" (aman dipublikasikan, dijaga RLS)
+const T='docs',fail=e=>{const x=new Error(e.message);x.code=e.code=='42501'?'invalid_argument':e.code;return x};
+function makeDB(sb){
+  const dsnap=(path,row)=>({exists:!!row,id:path.split('/').pop(),data:()=>row?row.data:undefined});
+  const doc=path=>({
+    async set(d){const{error}=await sb.from(T).upsert({path,data:d,updated_at:new Date().toISOString()});if(error)throw fail(error)},
+    async update(d){const{error}=await sb.rpc('merge_doc',{p_path:path,p_patch:d});if(error)throw fail(error)},
+    async delete(){const{error}=await sb.from(T).delete().eq('path',path);if(error)throw fail(error)},
+    onSnapshot(cb,err){
+      const load=async()=>{const{data,error}=await sb.from(T).select('path,data').eq('path',path).maybeSingle();error?err&&err(fail(error)):cb(dsnap(path,data))};
+      load();sb.channel('d:'+path).on('postgres_changes',{event:'*',schema:'public',table:T,filter:'path=eq.'+path},load).subscribe();
+    }
+  });
+  const collection=name=>({
+    onSnapshot(cb,err){
+      const pre=name+'/',rows=new Map(),emit=()=>cb({docs:[...rows.values()].map(r=>({id:r.path.slice(pre.length),data:()=>r.data}))});
+      (async()=>{
+        for(let f=0;;f+=1000){
+          const{data,error}=await sb.from(T).select('path,data').like('path',pre+'%').order('path').range(f,f+999);
+          if(error)return err&&err(fail(error));
+          data.forEach(r=>rows.set(r.path,r));if(data.length<1000)break;
+        }
+        emit();
+      })();
+      sb.channel('c:'+name).on('postgres_changes',{event:'*',schema:'public',table:T},pl=>{
+        const r=pl.eventType=='DELETE'?pl.old:pl.new;if(!r||!String(r.path).startsWith(pre))return;
+        pl.eventType=='DELETE'?rows.delete(r.path):rows.set(r.path,r);emit();
+      }).subscribe();
+    }
+  });
+  return{doc,collection};
+}
+function loginUI(sb){
+  return new Promise(ok=>{
+    M.innerHTML=`<h3>Masuk</h3><div class=pn><form id=lf><p>Masuk dengan akun yang dibuat oleh admin.</p><p><input id=le type=email placeholder="Email" required autocomplete=username style="width:100%;padding:9px"></p><p><input id=lp type=password placeholder="Kata sandi" required autocomplete=current-password style="width:100%;padding:9px"></p><div id=lm class=note></div><button>Masuk</button></form></div>`;
+    $('#lf').onsubmit=async ev=>{ev.preventDefault();$('#lm').textContent='Memeriksa…';
+      const{error}=await sb.auth.signInWithPassword({email:$('#le').value.trim(),password:$('#lp').value});
+      if(error)$('#lm').textContent='⚠ Email atau kata sandi salah';else ok()};
+  });
+}
+function keluarBtn(sb){const b=document.createElement('button');b.className='s';b.textContent='Keluar';b.style.cssText='position:fixed;top:8px;right:8px;z-index:9';b.onclick=async()=>{await sb.auth.signOut();location.reload()};document.body.appendChild(b)}
+
 /* ---------- mulai ---------- */
 (async()=>{
- brand();go('dash');
- const use=async n=>{try{return window.claude&&window.claude.use?await window.claude.use(n):null}catch(e){return null}};
- [DB,US,DL]=await Promise.all([use('db'),use('user'),use('downloads')]);
- if(US){const c=await US.can('data.write');canNull=c===null;canW=c!==false}
- booting=false;
- if(!DB){wait=false;setConn('off');go(tab);return}
- subscribe();go(tab);
+  brand();
+  if(SUPABASE_URL.startsWith('ISI_')){booting=false;M.innerHTML='<div class=pn><p>⚠ Alamat Supabase belum diisi. Buka file ini, isi <b>SUPABASE_URL</b> dan <b>SUPABASE_KEY</b> di bagian script.</p></div>';return}
+  const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  let{data:{session}}=await sb.auth.getSession();
+  if(!session){booting=false;await loginUI(sb);booting=true}
+  DB=makeDB(sb);
+  US={can:async()=>true};
+  DL={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data]),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}};
+  keluarBtn(sb);
+  booting=false;subscribe();go(tab);
 })();
 </script>
 
