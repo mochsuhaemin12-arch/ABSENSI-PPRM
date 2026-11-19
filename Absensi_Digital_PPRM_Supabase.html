@@ -1,0 +1,395 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Absensi Digital PPRM</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap">
+<style>
+/* Tata letak: header hijau pesantren + tab + satu kolom konten. Palet hijau tua dengan aksen emas tipis. */
+:root{--bg:#f4f7f4;--panel:#fff;--ink:#17231b;--mute:#5d6e62;--line:#d9e3db;--head:#14532d;--btn:#1f7a45;--btn-ink:#fff;--tint:#e5f2e9;--gold:#b08a3e;--bad:#b91c1c;--c-hadir:#16a34a;--c-izin:#2563eb;--c-sakit:#d97706;--c-alfa:#dc2626;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--font-h:'Plus Jakarta Sans','Inter',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1712;--panel:#15231a;--ink:#e5eee7;--mute:#9bb0a0;--line:#27402f;--head:#86efac;--btn:#3ccf74;--btn-ink:#04170b;--tint:#1b3524;--gold:#d3ae62;--bad:#f87171;--c-hadir:#4ade80;--c-izin:#60a5fa;--c-sakit:#fbbf24;--c-alfa:#f87171;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1712;--panel:#15231a;--ink:#e5eee7;--mute:#9bb0a0;--line:#27402f;--head:#86efac;--btn:#3ccf74;--btn-ink:#04170b;--tint:#1b3524;--gold:#d3ae62;--bad:#f87171;--c-hadir:#4ade80;--c-izin:#60a5fa;--c-sakit:#fbbf24;--c-alfa:#f87171;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5}
+.g{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.in{max-width:1100px;margin:0 auto}
+header{background:#14532d;color:#fff;padding-block:14px;border-bottom:3px solid var(--gold)}
+header .in{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font:700 18px/1.25 var(--font-h);letter-spacing:.2px}
+header small{opacity:.85}
+header img{height:44px;border-radius:8px;background:#fff;padding:2px}
+.chip{margin-left:auto;font-size:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:4px 10px;border-radius:99px;white-space:nowrap}
+nav{background:var(--panel);border-bottom:1px solid var(--line)}
+nav .in{display:flex;gap:2px;overflow-x:auto}
+nav button{flex:none;background:none;color:var(--mute);border:0;border-bottom:3px solid transparent;border-radius:0;padding:12px 14px;font:500 14px var(--font);cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--head);border-bottom-color:var(--gold);font-weight:600}
+nav button:hover{color:var(--head)}
+#bn{background:var(--tint);color:var(--head);font-size:13px;padding-block:8px}
+main{padding-block:18px 40px}
+h3{font:700 16px var(--font-h);color:var(--head);margin:20px 0 10px}
+h3:first-child{margin-top:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:flex-end}
+.lb{display:flex;flex-direction:column;font-size:12px;color:var(--mute);gap:4px}
+input,select,button,textarea{padding:8px 11px;border:1px solid var(--line);border-radius:8px;font:14px var(--font);background:var(--panel);color:var(--ink);min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+button{background:var(--btn);color:var(--btn-ink);border:0;cursor:pointer;font-weight:500}
+button:hover{filter:brightness(1.06)}
+button.s{background:var(--panel);color:var(--head);border:1px solid var(--btn)}
+button.d{background:var(--bad);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.kp{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:12px;color:var(--mute);border-top:3px solid var(--gold)}
+.kp b{display:block;font:700 28px var(--font-h);color:var(--head);margin-top:4px;font-variant-numeric:tabular-nums}
+.pn{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.pn h4{margin:0 0 12px;font:700 14px var(--font-h);color:var(--head);padding-bottom:8px;border-bottom:1px solid var(--line)}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px}
+.bar{display:grid;grid-template-columns:minmax(90px,150px) 1fr 48px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.bar i{background:var(--tint);border-radius:6px;height:12px;overflow:hidden;display:block}
+.bar b{display:block;height:100%;background:var(--btn);border-radius:6px}
+.bar em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.w{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:middle}
+th{background:var(--tint);color:var(--head);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.mf{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;margin-bottom:10px}
+.mf .row{grid-column:1/-1;margin:0}
+.id{display:flex;gap:14px;background:var(--panel);border:2px solid var(--btn);border-radius:14px;padding:14px;margin:12px 0;align-items:center;flex-wrap:wrap}
+.av{width:40px;height:40px;border-radius:50%;background:var(--tint);color:var(--head);display:inline-grid;place-items:center;font-weight:700;overflow:hidden;flex-shrink:0}
+.av img{width:100%;height:100%;object-fit:cover}
+.note{font-size:12px;color:var(--mute)}
+details.pn summary{cursor:pointer;font-weight:600;color:var(--head)}
+details.pn div{padding:3px 0;font-size:13px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--tint);color:var(--head)}
+#t{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px));background:#111;color:#fff;padding:10px 14px;border-radius:8px;display:none;max-width:calc(100% - 32px);z-index:20}
+@media (max-width:520px){.bar{grid-template-columns:90px 1fr 44px}.chip{margin-left:0}}
+@media (prefers-reduced-motion:no-preference){.bar b{transition:width .4s}}
+</style>
+<header class="g"><div class="in" id="hd"></div></header>
+<nav class="g"><div class="in" id="n"></div></nav>
+<div id="bn" class="g" hidden><div class="in" id="bnt"></div></div>
+<main class="g"><div class="in" id="m"></div></main>
+<div id="t" role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const ACTS=['Pengajian Jumat','Ziarah Maqbarah','Pengajian Selasa','Pembinaan Al-Qur’an'];
+const ST={hadir:'Hadir',izin:'Izin',sakit:'Sakit',alfa:'Alfa'};
+const GR=[['Shalat Berjamaah',['Shalat Subuh','Shalat Zuhur','Shalat Asar','Shalat Magrib','Shalat Isya']],['Ba’da Maghrib',['Pengajian Al-Qur’an','Shalawat Simtudduror','Shalawat Dibaiyah','Pembacaan Manaqib']],['Ba’da Isya',['Takror (Jam Belajar)','Musyawarah','Khithabah']]];
+const DEF={nama:'ABSENSI DIGITAL PPRM',sub:'Pondok Pesantren Roudlotul Muta’allimin',logo:'',warna:'#14532d'};
+const $=s=>document.querySelector(s),M=$('#m'),NV=$('#n');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const toast=x=>{const e=$('#t');e.textContent=x;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3200)};
+const seg=s=>String(s).replace(/[^A-Za-z0-9_\-:@+]/g,c=>'~'+c.charCodeAt(0).toString(16)+'~');
+const clean=o=>JSON.parse(JSON.stringify(o));
+const byId=(a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true});
+const pc=(a,b)=>b?Math.round(a*1000/b)/10:0;
+const kp=(l,v,k)=>`<div class=kp${k&&ST[k]?` style="border-top-color:var(--c-${k})"`:''}>${l}<b>${v}</b></div>`;
+const bar=(l,p)=>`<div class=bar><span>${esc(l)}</span><i><b style="width:${p}%"></b></i><em>${p}%</em></div>`;
+
+let S={students:[],att:[],rekap:[],set:{...DEF}},AD={},ready={},DB=null,US=null,DL=null,canW=true,canNull=false,conn='load',wait=false,tmo=null;
+let booting=true,tab='dash',edit=null,onData=null,ph=null,mb=null,sbm=null,sbk='',sbl='';
+const aktif=()=>S.students.filter(s=>s.active);
+const av=(s,z)=>s.foto?`<span class=av style="width:${z}px;height:${z}px"><img src="${s.foto}" alt=""></span>`:`<span class=av style="width:${z}px;height:${z}px">${esc((s.nama||'?')[0])}</span>`;
+
+/* ---------- tulis ke database ---------- */
+const errMsg=e=>{const c=e&&e.code;return c=='quota_exceeded'?'Penyimpanan database penuh':c=='resource_exhausted'?'Terlalu cepat, coba lagi sebentar':c=='invalid_argument'?'Akun ini tidak punya izin mengubah data':c=='revoked'?'Akses ke halaman ini sudah dicabut':'Gagal menyimpan, periksa koneksi'};
+async function W(fn,ok){
+ if(!DB){toast('Belum tersambung ke database. Muat ulang halaman dan masuk kembali.');return false}
+ if(!canW){toast('Akun ini hanya bisa melihat data, tidak bisa mengubah');return false}
+ try{await fn();if(ok)toast(ok);return true}catch(e){if(e&&e.code=='invalid_argument'&&canNull){canW=false;setConn('ro')}toast('⚠ '+errMsg(e));return false}
+}
+async function pool(items,n,fn){let i=0,fail=0;await Promise.all(Array.from({length:Math.min(n,items.length)},async()=>{while(i<items.length){const x=items[i++];try{await fn(x)}catch(e){fail++}}}));return fail}
+const readBuf=f=>f.arrayBuffer?f.arrayBuffer():new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(new Error('File tidak bisa dibaca'));r.readAsArrayBuffer(f)});
+const needXLSX=()=>typeof XLSX!=='undefined'?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('Pustaka Excel gagal dimuat, periksa internet lalu coba lagi'));document.head.appendChild(s)});
+const putStudent=s=>DB.doc('students/'+seg(s.id)).set(clean(s));
+async function delStudent(id){
+ await DB.doc('students/'+seg(id)).delete();const k=seg(id);
+ for(const [did,d] of Object.entries(AD)){if(d.m&&d.m[k]){const m={...d.m};delete m[k];await DB.doc('att/'+did).set({date:d.date,act:d.act,m})}}
+}
+async function markAtt(s,act,date,st){
+ const id=date+'_'+ACTS.indexOf(act),ref=DB.doc('att/'+id),k=seg(s.id),e={id:String(s.id),s:st,t:new Date().toLocaleTimeString('id-ID')};
+ if(AD[id])return ref.update({m:{[k]:e}});
+ try{await ref.update({m:{[k]:e}})}catch(x){await ref.set({date,act,m:{[k]:e}})}
+}
+
+/* ---------- baca dari database ---------- */
+function setConn(c){conn=c;brand()}
+function subscribe(){
+ const err=e=>{setConn(e&&e.code=='revoked'?'off':'err');toast('⚠ '+(e&&e.code=='revoked'?'Akses dicabut':'Data tidak bisa dibaca'))};
+ const got=k=>{ready[k]=true;if(ready.students&&ready.att&&ready.rekap&&ready.meta){ready.all=true;clearTimeout(tmo);setConn(canW?'ok':'ro');if(wait){wait=false;go(tab)}else if(onData)onData()}};
+ DB.collection('students').onSnapshot(sn=>{S.students=sn.docs.map(d=>({...d.data()})).sort(byId);got('students')},err);
+ DB.collection('att').onSnapshot(sn=>{AD={};const a=[];sn.docs.forEach(d=>{const v=d.data();AD[d.id]=v;Object.values(v.m||{}).forEach(e=>a.push({sid:e.id,act:v.act,date:v.date,st:e.s,time:e.t}))});S.att=a;got('att')},err);
+ DB.collection('rekap').onSnapshot(sn=>{S.rekap=sn.docs.map(d=>({...d.data()}));got('rekap')},err);
+ DB.doc('meta/set').onSnapshot(sn=>{S.set=Object.assign({},DEF,sn.exists?sn.data():{});got('meta');brand()},err);
+ tmo=setTimeout(()=>{if(!ready.all){setConn('slow')}},10000);
+}
+
+/* ---------- kerangka ---------- */
+function brand(){
+ const s=S.set,h=$('#hd');
+ const label={load:'Menghubungkan…',ok:'● Tersambung',ro:'Hanya lihat',err:'⚠ Gangguan',slow:'Belum terjangkau…',off:'Tidak tersambung'}[conn]||'';
+ h.parentElement.style.background=s.warna;
+ h.innerHTML=(s.logo?`<img src="${s.logo}" alt="">`:'')+`<div><h1>${esc(s.nama)}</h1><small>${esc(s.sub)}</small></div><span class=chip>${label}</span>`;
+ document.title=s.nama;
+ const b=$('#bn'),t=$('#bnt');
+ if(!DB){b.hidden=false;t.textContent='Belum tersambung ke database. Muat ulang halaman dan masuk kembali.'}
+ else if(!canW){b.hidden=false;t.textContent='Akun ini hanya bisa melihat. Hubungi admin.'}
+ else if(conn=='slow'){b.hidden=false;t.textContent='Database belum bisa dijangkau. Data yang tampil mungkin belum yang terbaru.'}
+ else b.hidden=true;
+}
+const TABS={dash:['Dashboard',dash],sta:['Statistik',sta],stu:['Database Santri',stu],abs:['Absensi Digital',abs],man:['Input Manual (Kertas)',man],rek:['Rekap Harian',rek],set:['Pengaturan',pengaturan],bak:['Cadangan Data',bak]};
+function go(k){
+ tab=k;edit=null;onData=null;ph=null;brand();
+ NV.innerHTML=Object.entries(TABS).map(([x,v])=>`<button data-k=${x} class="${x==k?'on':''}">${v[0]}</button>`).join('');
+ if(booting||(DB&&!ready.all)){wait=true;M.innerHTML='<div class=pn><p class=note>Memuat data…</p></div>';return}
+ TABS[k][1]();
+}
+NV.onclick=e=>e.target.dataset.k&&go(e.target.dataset.k);
+const sure=(el,t)=>{if(el.dataset.y)return true;el.dataset.y=1;const o=el.textContent;el.textContent=t;setTimeout(()=>{el.dataset.y='';el.textContent=o},3000);return false};
+async function saveFile(name,data){if(!DL)return toast('Unduhan tidak tersedia di tampilan ini');try{await DL.save({filename:name,data});toast('✔ File disimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan file')}}
+function xlsx(name,sheet,aoa,wch,pcols){if(typeof XLSX==='undefined')return toast('Pustaka Excel belum termuat');const ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=wch.map(w=>({wch:w}));(pcols||[]).forEach(c=>{for(let i=2;i<=aoa.length;i++){const z=ws[c+i];if(z)z.z='0%'}});const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheet);saveFile(name,new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})]))}
+const shrink=(f,max,type,q)=>new Promise((ok,no)=>{const im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(u);let d=cv.toDataURL(type,q);if(type=='image/png'&&d.length>180000)d=cv.toDataURL('image/jpeg',.8);ok(d)};im.onerror=()=>no();im.src=u});
+
+/* ---------- Dashboard ---------- */
+function dash(){
+ const draw=()=>{const d=today(),a=aktif().length,t=S.att.filter(x=>x.date==d),n=k=>t.filter(x=>x.st==k).length;
+  M.innerHTML=`<div class=cards>${kp('Total santri',S.students.length)}${kp('Aktif',a)}${kp('Nonaktif',S.students.length-a)}${kp('Hadir hari ini',n('hadir'),'hadir')}${kp('Izin',n('izin'),'izin')}${kp('Sakit',n('sakit'),'sakit')}${kp('Alfa',n('alfa'),'alfa')}</div>
+  <h3>Kehadiran hari ini per kegiatan</h3><div class=pn>${ACTS.map(x=>bar(x,pc(t.filter(y=>y.act==x&&y.st=='hadir').length,a))).join('')}</div>
+  <p class=note>Data tersimpan otomatis di database halaman ini dan dipakai bersama oleh semua akun yang diundang.</p>`};
+ draw();onData=draw;
+}
+
+/* ---------- Statistik ---------- */
+function sta(){
+ const SC={hadir:'var(--c-hadir)',izin:'var(--c-izin)',sakit:'var(--c-sakit)',alfa:'var(--c-alfa)'};
+ const kls=[...new Set(S.students.map(s=>s.madin).filter(Boolean))].sort();let L=[];
+ M.innerHTML=`<div class=row><label class=lb>Bulan<input type=month id=sb value="${sbm||today().slice(0,7)}"></label><label class=lb>Kegiatan<select id=sk><option value="">Semua kegiatan</option>${ACTS.map(a=>`<option ${a==sbk?'selected':''}>${a}</option>`).join('')}</select></label><label class=lb>Kelas Madin<select id=sm2><option value="">Semua kelas</option>${kls.map(k=>`<option ${k==sbl?'selected':''}>${esc(k)}</option>`).join('')}</select></label><button class=s id=sx>⬇ Ekspor Excel</button></div><div id=so></div>`;
+ const draw=()=>{
+  const b=$('#sb').value||today().slice(0,7),k=$('#sk').value,kl=$('#sm2').value;sbm=b;sbk=k;sbl=kl;
+  const mp=new Map(S.students.map(s=>[String(s.id),s]));
+  const r=S.att.filter(x=>x.date.startsWith(b)&&(!k||x.act==k)&&(!kl||(mp.get(String(x.sid))||{}).madin==kl));
+  const tot=r.length,n=s=>r.filter(x=>x.st==s).length,cn={hadir:n('hadir'),izin:n('izin'),sakit:n('sakit'),alfa:n('alfa')};
+  const days=[...new Set(r.map(x=>x.date))].sort(),ak=aktif().filter(s=>!kl||s.madin==kl).length;
+  let h=`<div class=cards>${kp('Santri aktif',ak)}${kp('Hari kegiatan',days.length)}${kp('Rata-rata hadir',pc(cn.hadir,tot)+'%','hadir')}${kp('Izin + Sakit',cn.izin+cn.sakit)}${kp('Alfa',cn.alfa,'alfa')}</div>`;
+  L=[];
+  if(!tot){h+='<p class=note style="margin-top:12px">Belum ada data absensi digital pada periode ini.</p>'}else{
+   const R=54,C=2*Math.PI*R;let o=0,seg2='';
+   Object.keys(ST).forEach(s=>{const l=cn[s]/tot*C;seg2+=`<circle r=${R} cx=70 cy=70 fill=none stroke-width=20 stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-o}" transform="rotate(-90 70 70)" style="stroke:${SC[s]}"/>`;o+=l});
+   const dn=`<div class=pn><h4>Komposisi kehadiran</h4><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center"><svg width=140 height=140 viewBox="0 0 140 140" role=img aria-label="Komposisi kehadiran">${seg2}<text x=70 y=68 text-anchor=middle font-size=22 font-weight=700 style="fill:var(--head)">${pc(cn.hadir,tot)}%</text><text x=70 y=86 text-anchor=middle font-size=11 style="fill:var(--mute)">Hadir</text></svg><div style="font-size:13px">${Object.keys(ST).map(s=>`<div style="margin:5px 0"><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${SC[s]};margin-right:8px"></i>${ST[s]}: <b>${cn[s]}</b> (${pc(cn[s],tot)}%)</div>`).join('')}</div></div></div>`;
+   let tr;
+   if(days.length<2)tr='<p class=note>Butuh minimal 2 hari data untuk grafik tren.</p>';else{
+    const v=days.map(d=>{const t=r.filter(x=>x.date==d);return pc(t.filter(x=>x.st=='hadir').length,t.length)}),W2=640,H=210,L0=34,B=26,T=10,X=i=>L0+i*(W2-L0-10)/(days.length-1),Y=p=>T+(H-T-B)*(1-p/100);
+    let g='';[0,25,50,75,100].forEach(p=>g+=`<line x1=${L0} x2=${W2-10} y1=${Y(p)} y2=${Y(p)} style="stroke:var(--line)"/><text x=${L0-6} y=${Y(p)+4} text-anchor=end font-size=10 style="fill:var(--mute)">${p}</text>`);
+    const pts=v.map((p,i)=>X(i)+','+Y(p)).join(' '),stp=Math.ceil(days.length/7);let lb='';
+    days.forEach((d,i)=>{if(i%stp==0||i==days.length-1)lb+=`<text x=${X(i)} y=${H-8} text-anchor=middle font-size=10 style="fill:var(--mute)">${+d.slice(8,10)}/${+d.slice(5,7)}</text>`});
+    tr=`<svg viewBox="0 0 ${W2} ${H}" width=100% style="display:block" role=img aria-label="Tren kehadiran harian">${g}<polygon points="${L0},${H-B} ${pts} ${W2-10},${H-B}" style="fill:var(--btn);opacity:.15"/><polyline points="${pts}" fill=none style="stroke:var(--btn)" stroke-width=2.4 stroke-linejoin=round />${v.map((p,i)=>`<circle cx=${X(i)} cy=${Y(p)} r=3 style="fill:var(--btn)"><title>${days[i]}: ${p}%</title></circle>`).join('')}${lb}</svg>`}
+   const bars=(keys,f)=>keys.map(x=>{const t=r.filter(y=>f(y)==x);return t.length?bar(x,pc(t.filter(y=>y.st=='hadir').length,t.length)):''}).join('')||'<p class=note>Tidak ada data.</p>';
+   const ps={};r.forEach(x=>{const q=ps[x.sid]=ps[x.sid]||{sid:x.sid,hadir:0,izin:0,sakit:0,alfa:0,t:0};q[x.st]++;q.t++});
+   L=Object.values(ps).map(q=>{const s=mp.get(String(q.sid))||{};return {...q,nama:s.nama||q.sid,madin:s.madin||'',formal:s.formal||'',p:pc(q.hadir,q.t)}}).sort((a,b)=>a.nama.localeCompare(b.nama));
+   const tb=(a,cols)=>`<div class=w><table><tr><th>#</th><th>Nama</th><th>Kelas Madin</th>${cols.map(x=>`<th class=n>${x[0]}</th>`).join('')}</tr>${a.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.nama)}</td><td>${esc(s.madin)}</td>${cols.map(x=>`<td class=n>${x[1](s)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+   const best=[...L].sort((a,b)=>b.p-a.p||b.t-a.t).slice(0,10),worst=L.filter(s=>s.alfa>0).sort((a,b)=>b.alfa-a.alfa||a.p-b.p).slice(0,10);
+   h+=`<div class=sg>${dn}<div class=pn><h4>Tren kehadiran harian (% hadir)</h4>${tr}</div></div>
+   <div class=sg><div class=pn><h4>Kehadiran per kegiatan</h4>${bars(k?[k]:ACTS,y=>y.act)}</div><div class=pn><h4>Kehadiran per kelas madin</h4>${bars(kls,y=>(mp.get(String(y.sid))||{}).madin)}</div></div>
+   <div class=sg><div class=pn><h4>Kehadiran terbaik (10 teratas)</h4>${tb(best,[['Hadir',s=>s.hadir],['%',s=>s.p+'%']])}</div><div class=pn><h4>Perlu perhatian (alfa terbanyak)</h4>${worst.length?tb(worst,[['Alfa',s=>s.alfa],['Izin/Sakit',s=>s.izin+s.sakit],['% hadir',s=>s.p+'%']]):'<p class=note>Tidak ada santri dengan alfa pada periode ini.</p>'}</div></div>`}
+  const mr=S.rekap.filter(x=>x.tgl.startsWith(b)),g2={};
+  mr.forEach(x=>{const q=g2[x.kg]=g2[x.kg]||{kg:x.kg,w:0,hadir:0,izin:0,sakit:0,alfa:0,n:0};['hadir','izin','sakit','alfa'].forEach(z=>q[z]+=x[z]||0);q.w+=x.wajib||0;q.n++});
+  if(mr.length)h+=`<div class=pn style="margin-top:12px"><h4>Rekap kegiatan manual (kertas)</h4><div class=w><table><tr><th>Kegiatan</th><th class=n>Pertemuan</th><th class=n>Hadir</th><th class=n>Izin</th><th class=n>Sakit</th><th class=n>Tdk hadir</th><th class=n>% hadir</th></tr>${Object.values(g2).sort((a,b)=>a.kg.localeCompare(b.kg)).map(q=>`<tr><td>${esc(q.kg)}</td><td class=n>${q.n}</td><td class=n>${q.hadir}</td><td class=n>${q.izin}</td><td class=n>${q.sakit}</td><td class=n>${q.alfa}</td><td class=n>${pc(q.hadir,q.w)}%</td></tr>`).join('')}</table></div></div>`;
+  $('#so').innerHTML=h};
+ $('#sb').onchange=$('#sk').onchange=$('#sm2').onchange=draw;
+ $('#sx').onclick=()=>{if(!L.length)return toast('Tidak ada data pada periode ini');xlsx('statistik-absensi-'+$('#sb').value+'.xlsx','Statistik',[['ID PPRM','Nama','Kelas Madin','Kelas Formal','Hadir','Izin','Sakit','Alfa','Total','% Hadir'],...L.map(s=>[s.sid,s.nama,s.madin,s.formal,s.hadir,s.izin,s.sakit,s.alfa,s.t,s.p/100])],[12,26,16,16,8,8,8,8,8,9],['J'])};
+ draw();onData=draw;
+}
+
+/* ---------- Database santri ---------- */
+function stu(){
+ ph=null;const e=edit?S.students.find(s=>String(s.id)==String(edit))||{}:{};
+ M.innerHTML=`<form id=f class=mf><label class=lb>ID PPRM<input id=fi name=id placeholder="ID PPRM" value="${esc(e.id)}" ${edit?'readonly':''} required></label><label class=lb>Nama lengkap<input id=fn name=nama value="${esc(e.nama)}" required></label><label class=lb>Alamat<input id=fa name=alamat value="${esc(e.alamat)}"></label><label class=lb>Domisili<input id=fd name=dom value="${esc(e.dom)}"></label><label class=lb>Kelas Madin<input id=fm name=madin value="${esc(e.madin)}"></label><label class=lb>Kelas Formal<input id=ff name=formal value="${esc(e.formal)}"></label><label class=lb>Foto<input type=file id=ft accept="image/*"></label><span id=fp>${e.foto?av(e,40):''}</span><div class=row><button>${edit?'Simpan perubahan':'+ Tambah santri'}</button>${edit?'<button type=button class=s id=cx>Batal</button>':''}</div></form>
+ <div class=row><input id=q placeholder="Cari ID / nama"><button class=s id=bf>📷 Impor foto massal</button><input type=file id=fb accept="image/*" multiple hidden><button id=im>⬆ Impor dari Excel</button><button class=s id=tp>⬇ Templat Excel</button><input type=file id=fx accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden></div><div id=hasil class=note></div><div class=w id=tb></div>`;
+ $('#f').onsubmit=async ev=>{ev.preventDefault();const o=Object.fromEntries(new FormData(ev.target));o.id=o.id.trim();if(!o.id)return;
+  if(ph)o.foto=ph;
+  let ok;
+  if(edit)ok=await W(()=>putStudent({...e,...o,id:e.id}),'Tersimpan');
+  else if(S.students.some(s=>String(s.id)==o.id))return toast('ID PPRM sudah dipakai');
+  else ok=await W(()=>putStudent({...o,active:true}),'Santri ditambahkan');
+  if(ok){edit=null;stu()}};
+ if(edit)$('#cx').onclick=()=>{edit=null;stu()};
+ $('#ft').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{ph=await shrink(f,160,'image/jpeg',.7);$('#fp').innerHTML=av({foto:ph},40)}catch(x){toast('Foto tidak bisa dibaca')}};
+ const draw=()=>{const q=$('#q').value.toLowerCase(),r=S.students.filter(s=>!q||String(s.nama).toLowerCase().includes(q)||String(s.id).includes(q));
+  $('#tb').innerHTML=`<table><tr><th>Foto</th><th>ID PPRM</th><th>Nama Lengkap</th><th>Alamat</th><th>Domisili</th><th>Kelas Madin</th><th>Kelas Formal</th><th>Keterangan</th><th>Status</th><th></th></tr>${r.map(s=>`<tr><td>${av(s,32)}</td><td>${esc(s.id)}</td><td>${esc(s.nama)}</td><td>${esc(s.alamat)}</td><td>${esc(s.dom)}</td><td>${esc(s.madin)}</td><td>${esc(s.formal)}</td><td>${esc(s.ket)}</td><td>${s.active?'Aktif':'Nonaktif'}</td><td style="white-space:nowrap"><button class=s data-e="${esc(s.id)}">Edit</button> <button class=s data-t="${esc(s.id)}">${s.active?'Nonaktifkan':'Aktifkan'}</button> <button class=d data-x="${esc(s.id)}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=10 class=note>Belum ada santri. Tambahkan lewat formulir atau impor dari Excel.</td></tr>'}</table>`};
+ draw();onData=draw;$('#q').oninput=draw;
+ $('#im').onclick=()=>$('#fx').click();$('#bf').onclick=()=>$('#fb').click();
+ $('#fb').onchange=async ev=>{const files=[...ev.target.files],no=[];let ok=0;
+  await pool(files,3,async f=>{const id=f.name.replace(/\.[^.]+$/,'').trim(),s=S.students.find(x=>String(x.id)==id);if(!s){no.push(f.name);return}try{const foto=await shrink(f,160,'image/jpeg',.7);await putStudent({...s,foto});ok++}catch(x){no.push(f.name)}});
+  $('#hasil').textContent='✔ Foto terpasang: '+ok+(no.length?' · Tidak cocok/gagal: '+no.length+' ('+no.slice(0,5).join(', ')+(no.length>5?'…':'')+')':'');ev.target.value=''};
+ $('#tp').onclick=()=>xlsx('templat-data-santri.xlsx','Data Santri',[['ID PPRM','Nama','Alamat','Domisili','Kelas Madin','Kelas Formal','Update Status'],['2026001','Contoh Nama Santri','Surabaya','Kamar A1','Ula 1','SMP 7','aktif']],[12,28,28,16,16,16,16]);
+ $('#fx').onchange=async ev=>{const inp=ev.target,f=inp.files&&inp.files[0];if(!f)return;const say=t=>{$('#hasil').textContent=t};
+  try{
+   say('Membaca file '+f.name+'…');
+   if(!DB)throw new Error('Belum tersambung ke database. Muat ulang halaman dan masuk kembali.');
+   if(!canW)throw new Error('Akun ini hanya bisa melihat, tidak bisa mengubah data');
+   await needXLSX();
+   const buf=await readBuf(f);
+   const wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+   const norm=x=>String(x??'').toLowerCase().replace(/[^a-z]/g,'');
+   const isId=k=>['idpprm','id','idsantri','nis','nisn','noinduk','nomorinduk','nomorindukpprm'].includes(k);
+   let rows=null,hi=-1;
+   const names=[...wb.SheetNames.filter(n=>n=='Data Santri'),...wb.SheetNames.filter(n=>n!='Data Santri'&&norm(n)!='petunjuk')];
+   for(const n of names){const r=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''});const i=r.findIndex(x=>x.some(c=>isId(norm(c))));if(i>=0){rows=r;hi=i;break}}
+   if(!rows)throw new Error('Kolom "ID PPRM" tidak ditemukan di baris judul. Unduh templat Excel lalu isi sesuai kolomnya.');
+   const col={};rows[hi].forEach((c,i)=>{const k=norm(c);if(isId(k)){if(col.id==null)col.id=i}else if(k.startsWith('nama')){if(col.nama==null)col.nama=i}else if(k.startsWith('alamat'))col.alamat=i;else if(k.startsWith('domisili')||k=='kamar'||k=='asrama')col.dom=i;else if(k=='kelasmadin'||k=='madin'||k=='kelasdiniyah')col.madin=i;else if(k=='kelasformal'||k=='formal'||k=='kelassekolah')col.formal=i;else if(k=='updatestatus'||k=='keterangan'||k=='ket'||k=='status')col.ket=i});
+   if(col.nama==null)throw new Error('Kolom "Nama" tidak ditemukan di baris judul');
+   const g=(r,k)=>col[k]==null?'':String(r[col[k]]??'').trim();
+   const map=new Map();let skip=0;
+   rows.slice(hi+1).forEach(r=>{let id=g(r,'id').replace(/\.0+$/,'');const o={id,nama:g(r,'nama'),alamat:g(r,'alamat'),dom:g(r,'dom'),madin:g(r,'madin'),formal:g(r,'formal'),ket:g(r,'ket')};
+    if(!o.id||!o.nama){if(r.some(c=>String(c).trim()))skip++;return}
+    map.set(o.id,o)});
+   let add=0,upd=0;const jobs=[];
+   map.forEach(o=>{const ex=S.students.find(s=>String(s.id)==o.id);
+    if(ex){const m={...ex};['nama','alamat','dom','madin','formal','ket'].forEach(k=>{if(col[k]!=null)m[k]=o[k]});jobs.push(m);upd++}else{jobs.push({...o,active:true});add++}});
+   if(!jobs.length)throw new Error('Tidak ada baris data yang valid (ID PPRM dan Nama wajib diisi)');
+   let done=0,fail=0,lastErr='';
+   const put=async s=>{for(let t=0;t<4;t++){try{await putStudent(s);return}catch(e){lastErr=e;if(t==3)throw e;await new Promise(r=>setTimeout(r,500*(t+1)))}}};
+   await pool(jobs,3,async s=>{try{await put(s)}catch(e){fail++}done++;if(done%5==0||done==jobs.length)say('Menyimpan '+done+' / '+jobs.length+' santri…')});
+   say((fail?'⚠ ':'✔ ')+'Impor selesai. Ditambah: '+add+' · Diperbarui: '+upd+' · Dilewati: '+skip+(fail?' · Gagal simpan: '+fail+' ('+errMsg(lastErr)+')':''));
+  }catch(x){say('⚠ Gagal impor: '+(x&&x.message||x))}
+  finally{try{inp.value=''}catch(e){}}};
+ $('#tb').onclick=async ev=>{const b=ev.target.dataset,id=b.e||b.t||b.x,s=S.students.find(x=>String(x.id)==id);if(!s)return;
+  if(b.e){edit=s.id;stu()}else if(b.t){W(()=>putStudent({...s,active:!s.active}))}
+  else if(sure(ev.target,'Yakin hapus?')){W(()=>delStudent(s.id),'Santri dihapus')}};
+}
+
+/* ---------- Absensi digital ---------- */
+function abs(){
+ M.innerHTML=`<div class=row><label class=lb>Kegiatan<select id=ac>${ACTS.map(a=>`<option>${a}</option>`).join('')}</select></label><label class=lb>Tanggal<input type=date id=dt value="${today()}"></label></div><div class=row><input id=idin placeholder="Ketik ID PPRM lalu Enter" style="min-width:240px" autocomplete=off></div><div id=rd></div><div id=st></div>`;
+ const cur=()=>({act:$('#ac').value,date:$('#dt').value});
+ const stats=()=>{const {act,date}=cur(),t=S.att.filter(x=>x.act==act&&x.date==date),done=new Set(t.map(x=>String(x.sid))),n=k=>t.filter(x=>x.st==k).length,bl=aktif().filter(s=>!done.has(String(s.id)));
+  $('#st').innerHTML=`<div class=cards>${Object.keys(ST).map(k=>kp(ST[k],n(k),k)).join('')}${kp('Belum diabsen',bl.length)}</div><details class=pn style="margin-top:12px"><summary>Daftar belum diabsen (${bl.length})</summary>${bl.map(s=>`<div>${esc(s.id)} · ${esc(s.nama)}</div>`).join('')||'<div class=note>Semua santri sudah diabsen</div>'}</details>`};
+ const mark=async(s,st)=>{const {act,date}=cur();if(S.att.some(x=>String(x.sid)==String(s.id)&&x.act==act&&x.date==date))return toast(s.nama+' sudah diabsen');
+  if(await W(()=>markAtt(s,act,date,st))){$('#rd').innerHTML='';toast('✔ '+s.nama+': '+ST[st]);$('#idin').focus()}};
+ $('#idin').onkeydown=ev=>{if(ev.key!='Enter')return;const s=S.students.find(x=>String(x.id)==ev.target.value.trim());ev.target.value='';
+  if(!s)return toast('Data santri tidak tersedia');if(!s.active)return toast('Santri nonaktif');
+  $('#rd').innerHTML=`<div class=id>${av(s,90)}<div><b style="font-size:16px">${esc(s.nama)}</b><br><span class=note>ID ${esc(s.id)} · ${esc(s.dom)}<br>Kelas Madin ${esc(s.madin)} · Kelas Formal ${esc(s.formal)}<br>${esc(s.alamat)}</span><div class=row>${Object.keys(ST).map(k=>`<button data-s=${k}>${ST[k]}</button>`).join('')}</div></div></div>`;
+  $('#rd').onclick=x=>x.target.dataset.s&&mark(s,x.target.dataset.s)};
+ $('#ac').onchange=$('#dt').onchange=stats;stats();onData=stats;$('#idin').focus();
+}
+
+/* ---------- Input manual (kertas) ---------- */
+const pct2=r=>r.wajib?Math.round(r.hadir*100/r.wajib):0;
+function man(){
+ const e=edit?S.rekap.find(x=>x.id==edit)||{}:{},n=aktif().length;
+ const num=(k,l,v)=>`<label class=lb>${l}<input type=number min=0 id=m_${k} name=${k} value="${esc(v)}" required></label>`;
+ M.innerHTML=`<p class=note>Untuk kegiatan yang absensinya ditulis di kertas: cukup masukkan hasil rekapnya di sini.</p><form id=fm2 class=mf><label class=lb>Tanggal<input type=date id=m_tgl name=tgl value="${esc(e.tgl||today())}" required></label><label class=lb>Kegiatan<select id=m_kg name=kg>${GR.map(([g,l])=>`<optgroup label="${g}">${l.map(k=>`<option ${k==e.kg?'selected':''}>${k}</option>`).join('')}</optgroup>`).join('')}</select></label>${num('wajib','Jumlah wajib',e.wajib??n)}${num('hadir','Hadir',e.hadir??'')}${num('izin','Izin',e.izin??'')}${num('sakit','Sakit',e.sakit??'')}${num('alfa','Tidak hadir',e.alfa??'')}<label class=lb>Petugas<input id=m_p name=petugas value="${esc(e.petugas)}"></label><label class=lb>Catatan<input id=m_c name=cat value="${esc(e.cat)}"></label><div class=row><button>${edit?'Simpan perubahan':'+ Simpan rekap'}</button>${edit?'<button type=button class=s id=cx>Batal</button>':''}</div></form>
+ <div class=row><label class=lb>Bulan<input type=month id=bl value="${mb||today().slice(0,7)}"></label><label class=lb>Kegiatan<select id=gr><option value="">Semua kegiatan</option>${GR.map(([g])=>`<option>${g}</option>`).join('')}</select></label><button class=s id=xl>⬇ Ekspor Excel</button></div><div class=w id=tb></div>`;
+ const rows=()=>{const b=$('#bl').value,g=$('#gr').value,ks=g?GR.find(x=>x[0]==g)[1]:null;return S.rekap.filter(r=>r.tgl.startsWith(b)&&(!ks||ks.includes(r.kg))).sort((a,b)=>a.tgl.localeCompare(b.tgl)||a.kg.localeCompare(b.kg))};
+ const draw=()=>{mb=$('#bl').value;const r=rows();$('#tb').innerHTML=`<table><tr><th>Tanggal</th><th>Kegiatan</th><th class=n>Wajib</th><th class=n>Hadir</th><th class=n>Izin</th><th class=n>Sakit</th><th class=n>Tdk hadir</th><th class=n>%</th><th>Petugas</th><th>Catatan</th><th></th></tr>${r.map(x=>`<tr><td>${x.tgl.split('-').reverse().join('/')}</td><td>${esc(x.kg)}</td><td class=n>${x.wajib}</td><td class=n>${x.hadir}</td><td class=n>${x.izin}</td><td class=n>${x.sakit}</td><td class=n>${x.alfa}</td><td class=n>${pct2(x)}%</td><td>${esc(x.petugas)}</td><td>${esc(x.cat)}</td><td style="white-space:nowrap"><button class=s data-e="${x.id}">Edit</button> <button class=d data-x="${x.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=11 class=note>Belum ada rekap pada bulan ini.</td></tr>'}</table>`};
+ draw();onData=draw;$('#bl').onchange=$('#gr').onchange=draw;
+ $('#fm2').onsubmit=async ev=>{ev.preventDefault();const o=Object.fromEntries(new FormData(ev.target));['wajib','hadir','izin','sakit','alfa'].forEach(k=>o[k]=+o[k]);
+  const id=edit?e.id:Date.now();mb=o.tgl.slice(0,7);
+  if(await W(()=>DB.doc('rekap/'+seg(id)).set(clean({...e,...o,id})),'Rekap tersimpan')){edit=null;man()}};
+ if(edit)$('#cx').onclick=()=>{edit=null;man()};
+ $('#tb').onclick=ev=>{const d=ev.target.dataset;if(d.e){edit=+d.e;man()}else if(d.x&&sure(ev.target,'Yakin hapus?')){W(()=>DB.doc('rekap/'+seg(d.x)).delete(),'Rekap dihapus')}};
+ $('#xl').onclick=()=>{const r=rows();if(!r.length)return toast('Tidak ada data pada bulan/kegiatan ini');xlsx('rekap-kegiatan-'+$('#bl').value+'.xlsx','Rekap Manual',[['Tanggal','Kegiatan','Jumlah Wajib','Hadir','Izin','Sakit','Tidak Hadir','% Hadir','Petugas','Catatan'],...r.map(x=>[x.tgl,x.kg,x.wajib,x.hadir,x.izin,x.sakit,x.alfa,pct2(x)/100,x.petugas||'',x.cat||''])],[12,26,12,8,8,8,12,9,16,28],['H'])};
+}
+
+/* ---------- Rekap harian ---------- */
+function rek(){
+ M.innerHTML=`<div class=row><label class=lb>Tanggal<input type=date id=dt value="${today()}"></label><button class=s id=xr>⬇ Ekspor Excel</button></div><div class=w id=tb></div>`;
+ const data=()=>{const d=$('#dt').value,a=aktif().length;return ACTS.map(x=>{const t=S.att.filter(y=>y.act==x&&y.date==d),n=k=>t.filter(y=>y.st==k).length;return {x,a,h:n('hadir'),i:n('izin'),s:n('sakit'),f:n('alfa')}})};
+ const draw=()=>{$('#tb').innerHTML=`<table><tr><th>Kegiatan</th><th class=n>Wajib</th><th class=n>Hadir</th><th class=n>Izin</th><th class=n>Sakit</th><th class=n>Alfa</th><th class=n>%</th></tr>${data().map(r=>`<tr><td>${r.x}</td><td class=n>${r.a}</td><td class=n>${r.h}</td><td class=n>${r.i}</td><td class=n>${r.s}</td><td class=n>${r.f}</td><td class=n>${r.a?Math.round(r.h*100/r.a):0}%</td></tr>`).join('')}</table>`};
+ $('#dt').onchange=draw;draw();onData=draw;
+ $('#xr').onclick=()=>xlsx('rekap-harian-'+$('#dt').value+'.xlsx','Rekap Harian',[['Kegiatan','Wajib','Hadir','Izin','Sakit','Alfa','% Hadir'],...data().map(r=>[r.x,r.a,r.h,r.i,r.s,r.f,r.a?r.h/r.a:0])],[26,8,8,8,8,8,9],['G']);
+}
+
+/* ---------- Pengaturan ---------- */
+function pengaturan(){
+ const s=S.set;let lg=s.logo;
+ M.innerHTML=`<h3>Pengaturan Tampilan</h3><form id=f class=mf style="max-width:560px"><label class=lb>Nama aplikasi<input id=pn name=nama value="${esc(s.nama)}" required></label><label class=lb>Nama pondok pesantren<input id=ps name=sub value="${esc(s.sub)}"></label><label class=lb>Warna header<input type=color id=pw name=warna value="${esc(s.warna)}" style="height:40px;width:100%;padding:3px"></label><label class=lb>Logo (PNG/JPG)<input type=file id=lg accept="image/*"></label><div id=lp>${s.logo?`<img src="${s.logo}" height=60 alt="">`:''}</div><div class=row><button>Simpan</button><button type=button class=s id=hl>Hapus logo</button><button type=button class=s id=rs>Kembalikan standar</button></div></form>`;
+ $('#lg').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{lg=await shrink(f,240,'image/png');$('#lp').innerHTML=`<img src="${lg}" height=60 alt="">`}catch(x){toast('Gambar tidak bisa dibaca')}};
+ $('#hl').onclick=()=>{lg='';$('#lp').innerHTML=''};
+ $('#rs').onclick=async()=>{if(!sure($('#rs'),'Yakin kembalikan?'))return;if(await W(()=>DB.doc('meta/set').set({...DEF}),'Tampilan dikembalikan'))pengaturan()};
+ $('#f').onsubmit=async ev=>{ev.preventDefault();const o=Object.fromEntries(new FormData(ev.target));await W(()=>DB.doc('meta/set').set(clean({nama:o.nama,sub:o.sub,warna:o.warna,logo:lg})),'✔ Pengaturan tersimpan')};
+}
+
+/* ---------- Cadangan data ---------- */
+async function restore(o){
+ if(!o||!Array.isArray(o.students))throw 0;
+ const ops=[];
+ o.students.forEach(s=>s&&s.id!=null&&String(s.id)&&ops.push(()=>putStudent(s)));
+ const g={};
+ (o.att||[]).forEach(x=>{if(!x||x.sid==null||!x.date||ACTS.indexOf(x.act)<0)return;const id=x.date+'_'+ACTS.indexOf(x.act);(g[id]=g[id]||{date:x.date,act:x.act,m:{...((AD[id]||{}).m||{})}}).m[seg(x.sid)]={id:String(x.sid),s:x.st,t:x.time||''}});
+ Object.entries(g).forEach(([id,v])=>ops.push(()=>DB.doc('att/'+id).set(clean(v))));
+ (o.rekap||[]).forEach(r=>r&&r.id!=null&&ops.push(()=>DB.doc('rekap/'+seg(r.id)).set(clean(r))));
+ if(o.set)ops.push(()=>DB.doc('meta/set').set(clean({...DEF,...o.set})));
+ const fail=await pool(ops,4,f=>f());return {total:ops.length,fail};
+}
+function bak(){
+ M.innerHTML=`<h3>Cadangan data</h3><div class=pn><p>Data sudah tersimpan otomatis di database halaman ini. Cadangan berguna sebagai arsip, atau untuk memindahkan data dari situs lama (Netlify) ke sini.</p><div class=row><button id=ex>⬇ Unduh cadangan</button><button class=s id=pf>⬆ Pulihkan dari file</button><input type=file id=fi accept=".json" hidden></div><div id=hasil class=note></div><p class=note>Memulihkan menambah atau menimpa data yang punya ID sama. Data lain yang sudah ada tidak dihapus. File cadangan dari situs lama bisa langsung dipakai.</p></div>`;
+ $('#ex').onclick=()=>saveFile('cadangan-pprm-'+today()+'.json',JSON.stringify({students:S.students,att:S.att,rekap:S.rekap,set:S.set}));
+ $('#pf').onclick=()=>$('#fi').click();
+ $('#fi').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{
+   if(!DB||!canW){$('#hasil').textContent='⚠ Akun ini tidak bisa mengubah data';return}
+   try{const o=JSON.parse(r.result);$('#hasil').textContent='Memulihkan data…';const x=await restore(o);$('#hasil').textContent='✔ Selesai. '+x.total+' data diproses'+(x.fail?', gagal: '+x.fail:'')}catch(e){$('#hasil').textContent='⚠ File cadangan tidak valid'}};
+  r.readAsText(f);ev.target.value=''};
+}
+
+/* ---------- sambungan Supabase ---------- */
+const SUPABASE_URL='ISI_PROJECT_URL_DI_SINI';      // contoh: https://abcdxyz.supabase.co
+const SUPABASE_KEY='ISI_ANON_PUBLIC_KEY_DI_SINI';  // kunci "anon public" (aman dipublikasikan, dijaga RLS)
+const T='docs',fail=e=>{const x=new Error(e.message);x.code=e.code=='42501'?'invalid_argument':e.code;return x};
+function makeDB(sb){
+  const dsnap=(path,row)=>({exists:!!row,id:path.split('/').pop(),data:()=>row?row.data:undefined});
+  const doc=path=>({
+    async set(d){const{error}=await sb.from(T).upsert({path,data:d,updated_at:new Date().toISOString()});if(error)throw fail(error)},
+    async update(d){const{error}=await sb.rpc('merge_doc',{p_path:path,p_patch:d});if(error)throw fail(error)},
+    async delete(){const{error}=await sb.from(T).delete().eq('path',path);if(error)throw fail(error)},
+    onSnapshot(cb,err){
+      const load=async()=>{const{data,error}=await sb.from(T).select('path,data').eq('path',path).maybeSingle();error?err&&err(fail(error)):cb(dsnap(path,data))};
+      load();sb.channel('d:'+path).on('postgres_changes',{event:'*',schema:'public',table:T,filter:'path=eq.'+path},load).subscribe();
+    }
+  });
+  const collection=name=>({
+    onSnapshot(cb,err){
+      const pre=name+'/',rows=new Map(),emit=()=>cb({docs:[...rows.values()].map(r=>({id:r.path.slice(pre.length),data:()=>r.data}))});
+      (async()=>{
+        for(let f=0;;f+=1000){
+          const{data,error}=await sb.from(T).select('path,data').like('path',pre+'%').order('path').range(f,f+999);
+          if(error)return err&&err(fail(error));
+          data.forEach(r=>rows.set(r.path,r));if(data.length<1000)break;
+        }
+        emit();
+      })();
+      sb.channel('c:'+name).on('postgres_changes',{event:'*',schema:'public',table:T},pl=>{
+        const r=pl.eventType=='DELETE'?pl.old:pl.new;if(!r||!String(r.path).startsWith(pre))return;
+        pl.eventType=='DELETE'?rows.delete(r.path):rows.set(r.path,r);emit();
+      }).subscribe();
+    }
+  });
+  return{doc,collection};
+}
+function loginUI(sb){
+  return new Promise(ok=>{
+    M.innerHTML=`<h3>Masuk</h3><div class=pn><form id=lf><p>Masuk dengan akun yang dibuat oleh admin.</p><p><input id=le type=email placeholder="Email" required autocomplete=username style="width:100%;padding:9px"></p><p><input id=lp type=password placeholder="Kata sandi" required autocomplete=current-password style="width:100%;padding:9px"></p><div id=lm class=note></div><button>Masuk</button></form></div>`;
+    $('#lf').onsubmit=async ev=>{ev.preventDefault();$('#lm').textContent='Memeriksa…';
+      const{error}=await sb.auth.signInWithPassword({email:$('#le').value.trim(),password:$('#lp').value});
+      if(error)$('#lm').textContent='⚠ Email atau kata sandi salah';else ok()};
+  });
+}
+function keluarBtn(sb){const b=document.createElement('button');b.className='s';b.textContent='Keluar';b.style.cssText='position:fixed;top:8px;right:8px;z-index:9';b.onclick=async()=>{await sb.auth.signOut();location.reload()};document.body.appendChild(b)}
+
+/* ---------- mulai ---------- */
+(async()=>{
+  brand();
+  if(SUPABASE_URL.startsWith'const SUPABASE_URL='https://ptoupxetorhkdasfeykv.supabase.co/rest/v1/';
+const SUPABASE_KEY='sb_publishable_iut8gQMgN9D7o04r2BwNcQ_uqrnQjTD';_'){booting=false;M.innerHTML='<div class=pn><p>⚠ Alamat Supabase belum diisi. Buka file ini, isi <b>SUPABASE_URL</b> dan <b>SUPABASE_KEY</b> di bagian script.</p></div>';return}
+  const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  let{data:{session}}=await sb.auth.getSession();
+  if(!session){booting=false;await loginUI(sb);booting=true}
+  DB=makeDB(sb);
+  US={can:async()=>true};
+  DL={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data]),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}};
+  keluarBtn(sb);
+  booting=false;subscribe();go(tab);
+})();
+</script>
+
+</body></html>
