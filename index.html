@@ -130,6 +130,11 @@ tr[data-sid]{cursor:pointer}tr[data-sid]:hover td{background:var(--tint)}
 .bc b{display:block;font-size:34px;margin-top:4px}
 .bc.c0{background:linear-gradient(135deg,#a3b82e,#6b8f1a)}.bc.c2{background:linear-gradient(135deg,#34d3b0,#0d9488)}.bc.c3{background:linear-gradient(135deg,#a3e66a,#4ade80)}.bc.c4{background:linear-gradient(135deg,#c7b52e,#8a8510)}
 @media(max-width:720px){.big{grid-template-columns:1fr;padding:18px}.bph{max-width:320px;margin:0 auto;font-size:80px}.bk{grid-template-columns:repeat(2,1fr)}}
+
+.big{grid-template-columns:280px 1fr;align-items:start}
+.bph{max-width:280px;aspect-ratio:1/1.15;border:6px solid var(--btn);margin:0 auto;font-size:84px}
+.bph.ok{border-color:#16a34a}.bph.late{border-color:#ea580c}.bph.sak{border-color:#d97706}
+@media(max-width:720px){.big{grid-template-columns:1fr}}
 </style>
 <header class="g"><div class="in" id="hd"></div></header>
 <nav class="g"><div class="in" id="n"></div></nav>
@@ -338,19 +343,32 @@ function abs(){
 /* ---------- Input manual (kertas) ---------- */
 const pct2=r=>r.wajib?Math.round(r.hadir*100/r.wajib):0;
 function man(){
- const e=edit?S.rekap.find(x=>x.id==edit)||{}:{},n=aktif().length;
- const num=(k,l,v)=>`<label class=lb>${l}<input type=number min=0 id=m_${k} name=${k} value="${esc(v)}" required></label>`;
- M.innerHTML=`<p class=note>Untuk kegiatan yang absensinya ditulis di kertas: cukup masukkan hasil rekapnya di sini.</p><form id=fm2 class=mf><label class=lb>Tanggal<input type=date id=m_tgl name=tgl value="${esc(e.tgl||today())}" required></label><label class=lb>Kegiatan<select id=m_kg name=kg>${GR.map(([g,l])=>`<optgroup label="${g}">${l.map(k=>`<option ${k==e.kg?'selected':''}>${k}</option>`).join('')}</optgroup>`).join('')}</select></label>${num('wajib','Jumlah wajib',e.wajib??n)}${num('hadir','Hadir',e.hadir??'')}${num('izin','Izin',e.izin??'')}${num('sakit','Sakit',e.sakit??'')}${num('alfa','Tidak hadir',e.alfa??'')}<label class=lb>Petugas<input id=m_p name=petugas value="${esc(e.petugas)}"></label><label class=lb>Catatan<input id=m_c name=cat value="${esc(e.cat)}"></label><div class=row><button>${edit?'Simpan perubahan':'+ Simpan rekap'}</button>${edit?'<button type=button class=s id=cx>Batal</button>':''}</div></form>
- <div class=row><label class=lb>Bulan<input type=month id=bl value="${mb||today().slice(0,7)}"></label><label class=lb>Kegiatan<select id=gr><option value="">Semua kegiatan</option>${GR.map(([g])=>`<option>${g}</option>`).join('')}</select></label><button class=s id=xl>⬇ Ekspor Excel</button></div><div class=w id=tb></div>`;
+ const e=edit?S.rekap.find(x=>x.id==edit)||{}:{};
+ let ex={...(e.m||{})};
+ const kls=[...new Set(aktif().map(s=>s.madin).filter(Boolean))].sort();
+ const LB={hadir:'Hadir',izin:'Izin',sakit:'Sakit',alfa:'Alfa'},NX={hadir:'izin',izin:'sakit',sakit:'alfa',alfa:'hadir'};
+ M.innerHTML=`<p class=note>Absen kertas per nama: semua santri otomatis <b>Hadir</b>. Ketuk status santri yang tidak hadir saja (ketuk lagi untuk ganti: Izin → Sakit → Alfa). Jumlah dan persen terhitung otomatis.</p><div class=mf><label class=lb>Tanggal<input type=date id=m_tgl value="${esc(e.tgl||today())}"></label><label class=lb>Kegiatan<select id=m_kg>${GR.map(([g,l])=>`<optgroup label="${g}">${l.map(k=>`<option ${k==e.kg?'selected':''}>${k}</option>`).join('')}</optgroup>`).join('')}</select></label><label class=lb>Kelas Madin<select id=m_kl><option value="">Semua kelas</option>${kls.map(k=>`<option ${k==e.kls?'selected':''}>${esc(k)}</option>`).join('')}</select></label><label class=lb>Petugas<input id=m_p value="${esc(e.petugas)}"></label><label class=lb>Catatan<input id=m_c value="${esc(e.cat)}"></label></div><div class=row><input id=m_q placeholder="Cari nama / ID" style="min-width:220px"><button class=s id=m_h>Reset: semua Hadir</button></div><div class=cards id=m_s></div><div class=w id=m_l style="max-height:420px;overflow:auto;margin:10px 0"></div><div class=row><button id=m_sv>${edit?'Simpan perubahan':'+ Simpan rekap'}</button>${edit?'<button type=button class=s id=cx>Batal</button>':''}</div>
+ <h3>Rekap tersimpan</h3><div class=row><label class=lb>Bulan<input type=month id=bl value="${mb||today().slice(0,7)}"></label><label class=lb>Kegiatan<select id=gr><option value="">Semua kegiatan</option>${GR.map(([g])=>`<option>${g}</option>`).join('')}</select></label><button class=s id=xl>⬇ Ekspor Excel</button></div><div class=w id=tb></div>`;
+ const arr=()=>{const k=$('#m_kl').value;return aktif().filter(s=>!k||s.madin==k)};
+ const stOf=s=>ex[String(s.id)]||'hadir';
+ const cnt=()=>{const A=arr(),c={hadir:0,izin:0,sakit:0,alfa:0};A.forEach(s=>c[stOf(s)]++);return{n:A.length,...c}};
+ const sum=()=>{const c=cnt();$('#m_s').innerHTML=kp('Wajib',c.n)+kp('Izin',c.izin,'izin')+kp('Sakit',c.sakit,'sakit')+kp('Alfa',c.alfa,'alfa')+kp('Hadir',pc(c.hadir,c.n)+'%','hadir')};
+ const chip=s=>{const t=stOf(s);return`<button data-i="${esc(s.id)}" style="min-width:74px;background:var(--c-${t});color:#fff">${LB[t]}</button>`};
+ const list=()=>{const q=$('#m_q').value.toLowerCase();$('#m_l').innerHTML=`<table><tr><th>ID</th><th>Nama</th><th>Kelas</th><th>Status</th></tr>${arr().filter(s=>!q||String(s.nama).toLowerCase().includes(q)||String(s.id).toLowerCase().includes(q)).map(s=>`<tr><td>${esc(s.id)}</td><td>${esc(s.nama)}</td><td>${esc(s.madin)}</td><td>${chip(s)}</td></tr>`).join('')}</table>`;sum()};
+ $('#m_l').onclick=ev=>{const i=ev.target.dataset.i;if(i==null)return;const s=S.students.find(x=>String(x.id)==i),t=NX[stOf(s)];if(t=='hadir')delete ex[i];else ex[i]=t;ev.target.outerHTML=chip(s);sum()};
+ $('#m_q').oninput=list;$('#m_kl').onchange=list;$('#m_h').onclick=()=>{ex={};list()};
+ const ab=x=>Object.entries(x.m||{}).map(([i,t])=>{const s=S.students.find(z=>String(z.id)==i);return esc(s?s.nama:i)+' ('+LB[t][0]+')'}).join(', ');
  const rows=()=>{const b=$('#bl').value,g=$('#gr').value,ks=g?GR.find(x=>x[0]==g)[1]:null;return S.rekap.filter(r=>r.tgl.startsWith(b)&&(!ks||ks.includes(r.kg))).sort((a,b)=>a.tgl.localeCompare(b.tgl)||a.kg.localeCompare(b.kg))};
- const draw=()=>{mb=$('#bl').value;const r=rows();$('#tb').innerHTML=`<table><tr><th>Tanggal</th><th>Kegiatan</th><th class=n>Wajib</th><th class=n>Hadir</th><th class=n>Izin</th><th class=n>Sakit</th><th class=n>Tdk hadir</th><th class=n>%</th><th>Petugas</th><th>Catatan</th><th></th></tr>${r.map(x=>`<tr><td>${x.tgl.split('-').reverse().join('/')}</td><td>${esc(x.kg)}</td><td class=n>${x.wajib}</td><td class=n>${x.hadir}</td><td class=n>${x.izin}</td><td class=n>${x.sakit}</td><td class=n>${x.alfa}</td><td class=n>${pct2(x)}%</td><td>${esc(x.petugas)}</td><td>${esc(x.cat)}</td><td style="white-space:nowrap"><button class=s data-e="${x.id}">Edit</button> <button class=d data-x="${x.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=11 class=note>Belum ada rekap pada bulan ini.</td></tr>'}</table>`};
- draw();onData=draw;$('#bl').onchange=$('#gr').onchange=draw;
- $('#fm2').onsubmit=async ev=>{ev.preventDefault();const o=Object.fromEntries(new FormData(ev.target));['wajib','hadir','izin','sakit','alfa'].forEach(k=>o[k]=+o[k]);
-  const id=edit?e.id:Date.now();mb=o.tgl.slice(0,7);
+ const draw=()=>{mb=$('#bl').value;const r=rows();$('#tb').innerHTML=`<table><tr><th>Tanggal</th><th>Kegiatan</th><th>Kelas</th><th class=n>Wajib</th><th class=n>Izin</th><th class=n>Sakit</th><th class=n>Alfa</th><th class=n>% Hadir</th><th>Tidak hadir (nama)</th><th>Petugas</th><th></th></tr>${r.map(x=>`<tr><td>${x.tgl.split('-').reverse().join('/')}</td><td>${esc(x.kg)}</td><td>${esc(x.kls||'Semua')}</td><td class=n>${x.wajib}</td><td class=n>${x.izin}</td><td class=n>${x.sakit}</td><td class=n>${x.alfa}</td><td class=n>${pct2(x)}%</td><td>${ab(x)||(x.m?'–':'<span class=note>(rekap angka)</span>')}</td><td>${esc(x.petugas)}</td><td style="white-space:nowrap"><button class=s data-e="${x.id}">Edit</button> <button class=d data-x="${x.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=11 class=note>Belum ada rekap pada bulan ini.</td></tr>'}</table>`};
+ list();draw();$('#bl').onchange=$('#gr').onchange=draw;
+ $('#m_sv').onclick=async()=>{const c=cnt(),tgl=$('#m_tgl').value;if(!tgl||!c.n)return toast('Isi tanggal dan pastikan ada santri');
+  const A=new Set(arr().map(s=>String(s.id))),m={};Object.entries(ex).forEach(([i,t])=>{if(A.has(i))m[i]=t});
+  const o={tgl,kg:$('#m_kg').value,kls:$('#m_kl').value,petugas:$('#m_p').value,cat:$('#m_c').value,wajib:c.n,hadir:c.hadir,izin:c.izin,sakit:c.sakit,alfa:c.alfa,m};
+  const id=edit?e.id:Date.now();mb=tgl.slice(0,7);
   if(await W(()=>DB.doc('rekap/'+seg(id)).set(clean({...e,...o,id})),'Rekap tersimpan')){edit=null;man()}};
  if(edit)$('#cx').onclick=()=>{edit=null;man()};
- $('#tb').onclick=ev=>{const d=ev.target.dataset;if(d.e){edit=+d.e;man()}else if(d.x&&sure(ev.target,'Yakin hapus?')){W(()=>DB.doc('rekap/'+seg(d.x)).delete(),'Rekap dihapus')}};
- $('#xl').onclick=()=>{const r=rows();if(!r.length)return toast('Tidak ada data pada bulan/kegiatan ini');xlsx('rekap-kegiatan-'+$('#bl').value+'.xlsx','Rekap Manual',[['Tanggal','Kegiatan','Jumlah Wajib','Hadir','Izin','Sakit','Tidak Hadir','% Hadir','Petugas','Catatan'],...r.map(x=>[x.tgl,x.kg,x.wajib,x.hadir,x.izin,x.sakit,x.alfa,pct2(x)/100,x.petugas||'',x.cat||''])],[12,26,12,8,8,8,12,9,16,28],['H'])};
+ $('#tb').onclick=ev=>{const d=ev.target.dataset;if(d.e){edit=+d.e;man();scrollTo(0,0)}else if(d.x&&sure(ev.target,'Yakin hapus?')){W(()=>DB.doc('rekap/'+seg(d.x)).delete(),'Rekap dihapus')}};
+ $('#xl').onclick=()=>{const r=rows();if(!r.length)return toast('Tidak ada data pada bulan/kegiatan ini');xlsx('rekap-kegiatan-'+$('#bl').value+'.xlsx','Rekap Manual',[['Tanggal','Kegiatan','Kelas','Jumlah Wajib','Izin','Sakit','Alfa','% Hadir','Tidak hadir (nama)','Petugas'],...r.map(x=>[x.tgl,x.kg,x.kls||'Semua',x.wajib,x.izin,x.sakit,x.alfa,pct2(x)/100,Object.entries(x.m||{}).map(([i,t])=>{const s=S.students.find(z=>String(z.id)==i);return (s?s.nama:i)+' ('+LB[t][0]+')'}).join(', '),x.petugas||''])],[12,26,12,12,8,8,8,9,40,16],['H'])};
 }
 
 /* ---------- Rekap harian ---------- */
@@ -417,38 +435,41 @@ function dash(){
 
 /* Absensi masuk/pulang */
 function pre(){
- let last=null,sak=false;
+ let last=null,md='';
  const MD=['Absensi Harian (Masuk / Pulang)',...ACTS],cm=()=>$('#am').value,hari=()=>cm()==MD[0];
- M.innerHTML=`<div class=stg><div class=row><label class=lb>Jenis absensi<select id=am>${MD.map(a=>`<option>${a}</option>`).join('')}</select></label><button class=s id=bs></button><span class=sw id=sw></span><b class=jam id=jam style="font-size:26px;color:var(--head)"></b><span class=note id=tgl></span></div><div class=big><div><div class=bph id=bph></div><input id=idin class=bin placeholder="Scan / ketik ID PPRM lalu Enter" autocomplete=off></div><div><div class=bhd id=bhd></div><div id=bi></div></div></div><div id=ps></div></div>`;
- const btn=()=>{const b=$('#bs');b.textContent=sak?'🤒 Mode Sakit AKTIF: scan berikutnya = Sakit':'🤒 Absen Sakit';b.className=sak?'':'s'};
+ M.innerHTML=`<div class=stg><div class=row><label class=lb>Jenis absensi<select id=am>${MD.map(a=>`<option>${a}</option>`).join('')}</select></label><button id=bs></button><button id=bz></button><span class=sw id=sw></span><b class=jam id=jam style="font-size:26px;color:var(--head)"></b><span class=note id=tgl></span></div><div class=big><div><div class=bph id=bph></div><input id=idin class=bin placeholder="Scan / ketik ID PPRM lalu Enter" autocomplete=off></div><div><div class=bhd id=bhd></div><div id=bi></div></div></div><div id=ps></div></div>`;
+ const btn=()=>{const a=$('#bs'),b=$('#bz');a.textContent=md=='sakit'?'🤒 Mode SAKIT aktif':'🤒 Absen Sakit';b.textContent=md=='izin'?'📝 Mode IZIN aktif':'📝 Absen Izin';a.className=md=='sakit'?'':'s';b.className=md=='izin'?'':'s'};
  const panel=()=>{const l=last,p=$('#bph'),h=$('#bhd');
-  if(!l){p.style.backgroundImage='';p.textContent='👤';h.textContent='Siap menerima absensi';h.className='bhd';
+  if(!l){p.className='bph';p.style.backgroundImage='';p.textContent='👤';h.textContent='Siap menerima absensi';h.className='bhd';
    $('#bi').innerHTML=['Nama','ID PPRM','Kelas Madin','Kelas Formal','Ruang','Alamat','Waktu'].map(x=>`<div class=bt><small>${x}</small>–</div>`).join('');return}
-  const s=l.s;p.style.backgroundImage=s.foto?`url("${s.foto}")`:'';p.textContent=s.foto?'':(s.nama||'?')[0];h.textContent=l.txt;h.className='bhd '+l.cls;
+  const s=l.s;p.className='bph '+l.cls;p.style.backgroundImage=s.foto?`url("${s.foto}")`:'';p.textContent=s.foto?'':(s.nama||'?')[0];h.textContent=l.txt;h.className='bhd '+l.cls;
   $('#bi').innerHTML=[['Nama',s.nama],['ID PPRM',s.id],['Kelas Madin',s.madin],['Kelas Formal',s.formal],['Ruang',s.dom],['Alamat',s.alamat],['Waktu',l.w]].map(([a,b])=>`<div class=bt><small>${a}</small>${esc(b)||'–'}</div>`).join('')};
  const draw=()=>{const w=wib();let h,sk,iz,al;
   if(hari()){const R=rowsDay(w.date),c=k=>R.filter(r=>r.k==k).length;h=c('tepat')+c('telat');sk=c('sakit');iz=c('izin');al=c('belum')+c('alfa')}
   else{const t=S.att.filter(x=>x.act==cm()&&x.date==today()),c=k=>t.filter(x=>x.st==k).length,d=new Set(t.map(x=>String(x.sid)));h=c('hadir');sk=c('sakit');iz=c('izin');al=aktif().filter(s=>!d.has(String(s.id))).length}
-  $('#ps').innerHTML=`<div class=bk>${[['Jumlah Murid',aktif().length],['Hadir',h],['Sakit',sk],['Izin',iz],['Alfa / Belum',al]].map(([a,b],i)=>`<div class="bc c${i}">${a}<b>${b}</b></div>`).join('')}</div><p class=note>Cukup scan atau ketik ID: otomatis tercatat Hadir. Tekan tombol Absen Sakit dulu bila santri sakit. Santri yang tidak absen dihitung Alfa.</p>`;anim()};
+  $('#ps').innerHTML=`<div class=bk>${[['Jumlah Murid',aktif().length],['Hadir',h],['Sakit',sk],['Izin',iz],['Alfa / Belum',al]].map(([a,b],i)=>`<div class="bc c${i}">${a}<b>${b}</b></div>`).join('')}</div><p class=note>Scan atau ketik ID: otomatis Hadir. Untuk sakit/izin, tekan tombolnya dulu lalu scan (bisa beberapa santri berturut-turut). Yang tidak absen dihitung Alfa.</p>`};
+ const loc=(s,w,p)=>{const k=seg(s.id);if(!HR[w.date])HR[w.date]={date:w.date,m:{}};const m=HR[w.date].m=HR[w.date].m||{};m[k]={...(m[k]||{}),id:String(s.id),...p}};
  const rec=async v=>{const s=S.students.find(x=>String(x.id)==String(v).trim());if(!s)return toast('Data santri tidak tersedia');if(!s.active)return toast('Santri nonaktif');
   const w=wib();let txt='✔ HADIR',cls='ok',wk=w.hms;
   if(hari()){
-   if(sak){if(!await W(()=>hrPut(s,{s:'sakit',in:'',out:''}),'✔ '+s.nama+': Sakit'))return;txt='🤒 SAKIT';cls='sak';wk='Sakit hari ini'}
-   else{const n=sec(w.hms),e0=((HR[w.date]||{}).m||{})[seg(s.id)];await scan(v);
-    if(e0&&e0.s&&e0.s!='hadir'&&!e0.in){txt=ST[e0.s].toUpperCase();cls='sak';wk='Tercatat '+ST[e0.s]}
-    else if(!e0||!e0.in){if(n<sec(JD.masuk)||n>sec(JD.tutup))return;const lt=Math.max(0,Math.ceil((n-sec(JD.batas))/60));txt=lt?'⏰ HADIR · TERLAMBAT '+lt+' MENIT':'✔ HADIR TEPAT WAKTU';cls=lt?'late':'ok';wk='Masuk '+w.hms}
-    else if(e0.out){txt='Sudah absen masuk & pulang';cls='late';wk='Masuk '+hm(e0.in)+' · Pulang '+hm(e0.out)}
-    else if(n>=sec(JD.pulang)){txt='✔ ABSEN PULANG';wk='Pulang '+w.hms}
-    else{txt='Sudah absen masuk';cls='late';wk='Masuk '+hm(e0.in)}}
+   const e0=((HR[w.date]||{}).m||{})[seg(s.id)];
+   if(md){const p={s:md,in:'',out:''};if(!await W(()=>hrPut(s,p),'✔ '+s.nama+': '+ST[md]))return;loc(s,w,p);txt=md=='sakit'?'🤒 SAKIT':'📝 IZIN';cls='sak';wk=ST[md]+' hari ini'}
+   else if(!e0||!e0.in){const lt=Math.max(0,Math.ceil((sec(w.hms)-sec(JD.batas))/60)),p={s:'hadir',in:w.hms,bt:JD.batas};if(!await W(()=>hrPut(s,p),'✔ '+s.nama+': Hadir'))return;loc(s,w,p);txt=lt?'⏰ HADIR · TERLAMBAT '+lt+' MENIT':'✔ HADIR TEPAT WAKTU';cls=lt?'late':'ok';wk='Masuk '+w.hms}
+   else if(e0.out){txt='Sudah absen masuk & pulang';cls='late';wk='Masuk '+hm(e0.in)+' · Pulang '+hm(e0.out)}
+   else if(sec(w.hms)-sec(e0.in)<120){txt='Sudah absen masuk';cls='late';wk='Masuk '+hm(e0.in)}
+   else{const p={out:w.hms};if(!await W(()=>hrPut(s,p),'✔ '+s.nama+': Pulang'))return;loc(s,w,p);txt='✔ ABSEN PULANG';wk='Masuk '+hm(e0.in)+' · Pulang '+w.hms}
   }else{
-   const act=cm(),date=today();
-   if(S.att.some(x=>String(x.sid)==String(s.id)&&x.act==act&&x.date==date)){toast(s.nama+' sudah diabsen');txt='Sudah diabsen';cls='late'}
-   else{const st=sak?'sakit':'hadir';if(!await W(()=>markAtt(s,act,date,st),'✔ '+s.nama+': '+ST[st]))return;if(sak){txt='🤒 SAKIT';cls='sak';wk='Sakit'}}
+   const act=cm(),date=today(),dup=S.att.some(x=>String(x.sid)==String(s.id)&&x.act==act&&x.date==date);
+   if(dup&&!md){toast(s.nama+' sudah diabsen');txt='Sudah diabsen';cls='late'}
+   else{const st=md||'hadir';if(!await W(()=>markAtt(s,act,date,st),'✔ '+s.nama+': '+ST[st]))return;
+    S.att=S.att.filter(x=>!(String(x.sid)==String(s.id)&&x.act==act&&x.date==date));S.att.push({sid:String(s.id),act,date,st,time:w.hms});
+    if(md){txt=md=='sakit'?'🤒 SAKIT':'📝 IZIN';cls='sak';wk=ST[md]}}
   }
-  sak=false;btn();last={s,txt,cls,w:wk};panel();draw()};
+  last={s,txt,cls,w:wk};panel();draw()};
  $('#idin').onkeydown=ev=>{if(ev.key=='Enter'){const v=ev.target.value;ev.target.value='';if(v.trim())rec(v)}};
- $('#bs').onclick=()=>{sak=!sak;btn();$('#idin').focus()};
- $('#am').onchange=()=>{last=null;sak=false;btn();panel();draw();$('#idin').focus()};
+ $('#bs').onclick=()=>{md=md=='sakit'?'':'sakit';btn();$('#idin').focus()};
+ $('#bz').onclick=()=>{md=md=='izin'?'':'izin';btn();$('#idin').focus()};
+ $('#am').onchange=()=>{last=null;md='';btn();panel();draw();$('#idin').focus()};
  btn();tickUI();panel();draw();onData=draw;$('#idin').focus();
 }
 
