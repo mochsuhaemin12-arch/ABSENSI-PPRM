@@ -275,13 +275,13 @@ function stu(){
   else ok=await W(()=>putStudent({...o,active:true}),'Santri ditambahkan');
   if(ok){edit=null;stu()}};
  if(edit)$('#cx').onclick=()=>{edit=null;stu()};
- $('#ft').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{ph=await shrink(f,160,'image/jpeg',.7);$('#fp').innerHTML=av({foto:ph},40)}catch(x){toast('Foto tidak bisa dibaca')}};
+ $('#ft').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{ph=await shrink(f,480,'image/jpeg',.82);$('#fp').innerHTML=av({foto:ph},40)}catch(x){toast('Foto tidak bisa dibaca')}};
  const draw=()=>{const q=$('#q').value.toLowerCase(),r=S.students.filter(s=>!q||String(s.nama).toLowerCase().includes(q)||String(s.id).includes(q));
   $('#tb').innerHTML=`<table><tr><th>Foto</th><th>ID PPRM</th><th>Nama Lengkap</th><th>Alamat</th><th>Domisili</th><th>Kelas Madin</th><th>Kelas Formal</th><th>Keterangan</th><th>Status</th><th></th></tr>${r.map(s=>`<tr><td>${av(s,32)}</td><td>${esc(s.id)}</td><td>${esc(s.nama)}</td><td>${esc(s.alamat)}</td><td>${esc(s.dom)}</td><td>${esc(s.madin)}</td><td>${esc(s.formal)}</td><td>${esc(s.ket)}</td><td>${s.active?'Aktif':'Nonaktif'}</td><td style="white-space:nowrap"><button class=s data-e="${esc(s.id)}">Edit</button> <button class=s data-t="${esc(s.id)}">${s.active?'Nonaktifkan':'Aktifkan'}</button> <button class=d data-x="${esc(s.id)}">Hapus</button></td></tr>`).join('')||'<tr><td colspan=10 class=note>Belum ada santri. Tambahkan lewat formulir atau impor dari Excel.</td></tr>'}</table>`};
  draw();onData=draw;$('#q').oninput=draw;
  $('#im').onclick=()=>$('#fx').click();$('#bf').onclick=()=>$('#fb').click();
  $('#fb').onchange=async ev=>{const files=[...ev.target.files],no=[];let ok=0;
-  await pool(files,3,async f=>{const id=f.name.replace(/\.[^.]+$/,'').trim(),s=S.students.find(x=>String(x.id)==id);if(!s){no.push(f.name);return}try{const foto=await shrink(f,160,'image/jpeg',.7);await putStudent({...s,foto});ok++}catch(x){no.push(f.name)}});
+  await pool(files,3,async f=>{const id=f.name.replace(/\.[^.]+$/,'').trim(),s=S.students.find(x=>String(x.id)==id);if(!s){no.push(f.name);return}try{const foto=await shrink(f,480,'image/jpeg',.82);await putStudent({...s,foto});ok++}catch(x){no.push(f.name)}});
   $('#hasil').textContent='✔ Foto terpasang: '+ok+(no.length?' · Tidak cocok/gagal: '+no.length+' ('+no.slice(0,5).join(', ')+(no.length>5?'…':'')+')':'');ev.target.value=''};
  $('#tp').onclick=()=>xlsx('templat-data-santri.xlsx','Data Santri',[['ID PPRM','Nama','Alamat','Domisili','Kelas Madin','Kelas Formal','Update Status'],['2026001','Contoh Nama Santri','Surabaya','Kamar A1','Ula 1','SMP 7','aktif']],[12,28,28,16,16,16,16]);
  $('#fx').onchange=async ev=>{const inp=ev.target,f=inp.files&&inp.files[0];if(!f)return;const say=t=>{$('#hasil').textContent=t};
