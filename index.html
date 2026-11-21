@@ -115,6 +115,21 @@ tr[data-sid]{cursor:pointer}tr[data-sid]:hover td{background:var(--tint)}
 @media (max-width:900px){.dg{grid-template-columns:1fr}.jam{font-size:34px}}
 @media (min-width:900px){nav{position:fixed;left:0;top:var(--hh);bottom:0;width:236px;overflow:auto;border-right:1px solid var(--line);border-bottom:0;padding-top:12px;z-index:5}nav .in{flex-direction:column;gap:4px;max-width:none;margin:0}nav button{text-align:left;border-radius:10px;border-bottom:0;padding:11px 14px}nav button.on{background:var(--tint);box-shadow:inset 3px 0 0 var(--gold)}#bn,main{margin-left:236px}.in{max-width:1180px}}
 @media print{header,nav,#bn,#t,button,.row,.mf{display:none!important}main{margin:0!important}}
+
+/* Layar Absensi gabungan (besar di tengah) */
+.stg{max-width:1040px;margin:0 auto}
+.big{display:grid;grid-template-columns:minmax(240px,.9fr) 1.1fr;gap:26px;background:var(--panel);border-radius:28px;padding:28px;box-shadow:0 14px 40px rgba(5,67,42,.12);border:1px solid var(--line)}
+.bph{aspect-ratio:3/4;width:100%;border-radius:22px;background:var(--tint) center/cover no-repeat;display:grid;place-items:center;font:700 110px var(--font-h);color:var(--head)}
+.bin{width:100%;margin-top:14px;font-size:20px;padding:14px 18px;border-radius:99px;border:2px solid var(--btn)}
+.bhd{background:var(--btn);color:#fff;text-align:center;font:700 clamp(18px,3vw,26px) var(--font-h);padding:16px;border-radius:99px;margin-bottom:14px}
+.bhd.ok{background:#16a34a}.bhd.late{background:#ea580c}.bhd.sak{background:#d97706}
+.bt{border:1.5px solid #5b6ab0;border-radius:99px;padding:9px 20px;margin:9px 0;font:600 clamp(15px,2.2vw,19px) var(--font);min-height:46px;display:flex;flex-direction:column;justify-content:center}
+.bt small{font-size:10px;font-weight:500;color:var(--mute);line-height:1}
+.bk{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px}
+.bc{border-radius:20px;padding:14px 16px;color:#fff;font:700 13px var(--font-h);text-transform:uppercase;background:linear-gradient(135deg,#4ade80,#15803d)}
+.bc b{display:block;font-size:34px;margin-top:4px}
+.bc.c0{background:linear-gradient(135deg,#a3b82e,#6b8f1a)}.bc.c2{background:linear-gradient(135deg,#34d3b0,#0d9488)}.bc.c3{background:linear-gradient(135deg,#a3e66a,#4ade80)}.bc.c4{background:linear-gradient(135deg,#c7b52e,#8a8510)}
+@media(max-width:720px){.big{grid-template-columns:1fr;padding:18px}.bph{max-width:320px;margin:0 auto;font-size:80px}.bk{grid-template-columns:repeat(2,1fr)}}
 </style>
 <header class="g"><div class="in" id="hd"></div></header>
 <nav class="g"><div class="in" id="n"></div></nav>
@@ -193,7 +208,7 @@ function brand(){
  else if(conn=='slow'){b.hidden=false;t.textContent='Database belum bisa dijangkau. Data yang tampil mungkin belum yang terbaru.'}
  else b.hidden=true;
 }
-const TABS={dash:['🏠 Dashboard',dash],pre:['✅ Absensi',pre],abs:['📋 Absensi Kegiatan',abs],stu:['👥 Data Murid',stu],mon:['📊 Monitoring Kehadiran',mon],lat:['⏰ Data Keterlambatan',lat],rek:['🧾 Rekap Harian',rek],sta:['📈 Grafik Statistik',sta],man:['✍ Input Manual (Kertas)',man],inf:['📢 Pengumuman',inf],set:['⚙ Pengaturan',pengaturan],bak:['💾 Cadangan Data',bak]};
+const TABS={dash:['🏠 Dashboard',dash],pre:['✅ Absensi (Harian & Kegiatan)',pre],stu:['👥 Data Murid',stu],mon:['📊 Monitoring Kehadiran',mon],lat:['⏰ Data Keterlambatan',lat],rek:['🧾 Rekap Harian',rek],sta:['📈 Grafik Statistik',sta],man:['✍ Input Manual (Kertas)',man],inf:['📢 Pengumuman',inf],set:['⚙ Pengaturan',pengaturan],bak:['💾 Cadangan Data',bak]};
 function go(k){
  tab=k;edit=null;onData=null;ph=null;brand();
  NV.innerHTML=Object.entries(TABS).map(([x,v])=>`<button data-k=${x} class="${x==k?'on':''}">${v[0]}</button>`).join('');
@@ -402,12 +417,39 @@ function dash(){
 
 /* Absensi masuk/pulang */
 function pre(){
- M.innerHTML=`<div class=hero><div class=top><div><small id=tgl></small><div class=jam id=jam></div></div><span class=sw id=sw></span></div></div><div class=row><input id=idin placeholder="Ketik atau scan ID PPRM lalu Enter" style="min-width:260px;flex:1" autocomplete=off></div><p class=note>Ketukan pertama mencatat absen masuk (tepat waktu atau terlambat otomatis). Ketukan kedua, setelah jam pulang dibuka, mencatat absen pulang. Absen masuk tidak bisa diulang pada tanggal yang sama.</p><div id=pp></div><div id=ps></div>`;
- const draw=()=>{const w=wib(),R=rowsDay(w.date),c=k=>R.filter(r=>r.k==k).length,bl=R.filter(r=>r.k=='belum');
-  $('#pp').innerHTML=selSid?pnl(selS(),w.date):'';bindP();
-  $('#ps').innerHTML=`<div class=kg style="margin-top:12px">${kc('p1','Hadir',c('tepat')+c('telat'),'ok','✔')}${kc('p2','Tepat waktu',c('tepat'),'ok','🕒')}${kc('p3','Terlambat',c('telat'),'late','⏰')}${kc('p4','Belum hadir',bl.length,'no','❗')}</div><details class=pn><summary>Daftar belum hadir (${bl.length})</summary>${bl.map(r=>`<div>${esc(r.s.id)} · ${esc(r.s.nama)}</div>`).join('')||'<div class=note>Semua santri sudah tercatat</div>'}</details>`;anim()};
- $('#idin').onkeydown=ev=>{if(ev.key=='Enter'){const v=ev.target.value;ev.target.value='';scan(v)}};
- tickUI();draw();onData=draw;$('#idin').focus();
+ let last=null,sak=false;
+ const MD=['Absensi Harian (Masuk / Pulang)',...ACTS],cm=()=>$('#am').value,hari=()=>cm()==MD[0];
+ M.innerHTML=`<div class=stg><div class=row><label class=lb>Jenis absensi<select id=am>${MD.map(a=>`<option>${a}</option>`).join('')}</select></label><button class=s id=bs></button><span class=sw id=sw></span><b class=jam id=jam style="font-size:26px;color:var(--head)"></b><span class=note id=tgl></span></div><div class=big><div><div class=bph id=bph></div><input id=idin class=bin placeholder="Scan / ketik ID PPRM lalu Enter" autocomplete=off></div><div><div class=bhd id=bhd></div><div id=bi></div></div></div><div id=ps></div></div>`;
+ const btn=()=>{const b=$('#bs');b.textContent=sak?'🤒 Mode Sakit AKTIF: scan berikutnya = Sakit':'🤒 Absen Sakit';b.className=sak?'':'s'};
+ const panel=()=>{const l=last,p=$('#bph'),h=$('#bhd');
+  if(!l){p.style.backgroundImage='';p.textContent='👤';h.textContent='Siap menerima absensi';h.className='bhd';
+   $('#bi').innerHTML=['Nama','ID PPRM','Kelas Madin','Kelas Formal','Ruang','Alamat','Waktu'].map(x=>`<div class=bt><small>${x}</small>–</div>`).join('');return}
+  const s=l.s;p.style.backgroundImage=s.foto?`url("${s.foto}")`:'';p.textContent=s.foto?'':(s.nama||'?')[0];h.textContent=l.txt;h.className='bhd '+l.cls;
+  $('#bi').innerHTML=[['Nama',s.nama],['ID PPRM',s.id],['Kelas Madin',s.madin],['Kelas Formal',s.formal],['Ruang',s.dom],['Alamat',s.alamat],['Waktu',l.w]].map(([a,b])=>`<div class=bt><small>${a}</small>${esc(b)||'–'}</div>`).join('')};
+ const draw=()=>{const w=wib();let h,sk,iz,al;
+  if(hari()){const R=rowsDay(w.date),c=k=>R.filter(r=>r.k==k).length;h=c('tepat')+c('telat');sk=c('sakit');iz=c('izin');al=c('belum')+c('alfa')}
+  else{const t=S.att.filter(x=>x.act==cm()&&x.date==today()),c=k=>t.filter(x=>x.st==k).length,d=new Set(t.map(x=>String(x.sid)));h=c('hadir');sk=c('sakit');iz=c('izin');al=aktif().filter(s=>!d.has(String(s.id))).length}
+  $('#ps').innerHTML=`<div class=bk>${[['Jumlah Murid',aktif().length],['Hadir',h],['Sakit',sk],['Izin',iz],['Alfa / Belum',al]].map(([a,b],i)=>`<div class="bc c${i}">${a}<b>${b}</b></div>`).join('')}</div><p class=note>Cukup scan atau ketik ID: otomatis tercatat Hadir. Tekan tombol Absen Sakit dulu bila santri sakit. Santri yang tidak absen dihitung Alfa.</p>`;anim()};
+ const rec=async v=>{const s=S.students.find(x=>String(x.id)==String(v).trim());if(!s)return toast('Data santri tidak tersedia');if(!s.active)return toast('Santri nonaktif');
+  const w=wib();let txt='✔ HADIR',cls='ok',wk=w.hms;
+  if(hari()){
+   if(sak){if(!await W(()=>hrPut(s,{s:'sakit',in:'',out:''}),'✔ '+s.nama+': Sakit'))return;txt='🤒 SAKIT';cls='sak';wk='Sakit hari ini'}
+   else{const n=sec(w.hms),e0=((HR[w.date]||{}).m||{})[seg(s.id)];await scan(v);
+    if(e0&&e0.s&&e0.s!='hadir'&&!e0.in){txt=ST[e0.s].toUpperCase();cls='sak';wk='Tercatat '+ST[e0.s]}
+    else if(!e0||!e0.in){if(n<sec(JD.masuk)||n>sec(JD.tutup))return;const lt=Math.max(0,Math.ceil((n-sec(JD.batas))/60));txt=lt?'⏰ HADIR · TERLAMBAT '+lt+' MENIT':'✔ HADIR TEPAT WAKTU';cls=lt?'late':'ok';wk='Masuk '+w.hms}
+    else if(e0.out){txt='Sudah absen masuk & pulang';cls='late';wk='Masuk '+hm(e0.in)+' · Pulang '+hm(e0.out)}
+    else if(n>=sec(JD.pulang)){txt='✔ ABSEN PULANG';wk='Pulang '+w.hms}
+    else{txt='Sudah absen masuk';cls='late';wk='Masuk '+hm(e0.in)}}
+  }else{
+   const act=cm(),date=today();
+   if(S.att.some(x=>String(x.sid)==String(s.id)&&x.act==act&&x.date==date)){toast(s.nama+' sudah diabsen');txt='Sudah diabsen';cls='late'}
+   else{const st=sak?'sakit':'hadir';if(!await W(()=>markAtt(s,act,date,st),'✔ '+s.nama+': '+ST[st]))return;if(sak){txt='🤒 SAKIT';cls='sak';wk='Sakit'}}
+  }
+  sak=false;btn();last={s,txt,cls,w:wk};panel();draw()};
+ $('#idin').onkeydown=ev=>{if(ev.key=='Enter'){const v=ev.target.value;ev.target.value='';if(v.trim())rec(v)}};
+ $('#bs').onclick=()=>{sak=!sak;btn();$('#idin').focus()};
+ $('#am').onchange=()=>{last=null;sak=false;btn();panel();draw();$('#idin').focus()};
+ btn();tickUI();panel();draw();onData=draw;$('#idin').focus();
 }
 
 /* Monitoring kehadiran harian */
