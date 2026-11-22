@@ -182,11 +182,7 @@ async function delStudent(id){
  await DB.doc('students/'+seg(id)).delete();const k=seg(id);
  for(const [did,d] of Object.entries(AD)){if(d.m&&d.m[k]){const m={...d.m};delete m[k];await DB.doc('att/'+did).set({date:d.date,act:d.act,m})}}
 }
-async function markAtt(s,act,date,st){
- const id=date+'_'+ACTS.indexOf(act),ref=DB.doc('att/'+id),k=seg(s.id),e={id:String(s.id),s:st,t:new Date().toLocaleTimeString('id-ID')};
- if(AD[id])return ref.update({m:{[k]:e}});
- try{await ref.update({m:{[k]:e}})}catch(x){await ref.set({date,act,m:{[k]:e}})}
-}
+async function markAtt(s,act,date,st){const ref=DB.doc('att/'+date+'_'+ACTS.indexOf(act)),cu=(await ref.get())||{date,act},m={...(cu.m||{})};m[seg(s.id)]={id:String(s.id),s:st,t:new Date().toLocaleTimeString('id-ID')};await ref.set({...cu,date,act,m})}
 
 /* ---------- baca dari database ---------- */
 function setConn(c){conn=c;brand()}
@@ -420,8 +416,7 @@ const curW=()=>'';const tickUI=()=>{const j=$('#jam');if(!j)return;const w=wib()
 setInterval(tickUI,1000);
 const kc=(n,l,v,c,ic)=>`<div class="kc ${c}"><span class=ic>${ic}</span><div><small>${l}</small><b data-n="${n}" data-v="${v}">${LV[n]??0}</b></div></div>`;
 function anim(){const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;document.querySelectorAll('[data-v]').forEach(el=>{const to=+el.dataset.v,k=el.dataset.n,from=LV[k]??0;LV[k]=to;if(from==to||rm){el.textContent=to;return}const t0=performance.now(),f=t=>{const p=Math.min(1,(t-t0)/600);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-p,3)));if(p<1&&el.isConnected)requestAnimationFrame(f)};requestAnimationFrame(f)})}
-async function hrPut(s,patch){const d=wib().date,k=seg(s.id),ref=DB.doc('hr/'+d),cur=((HR[d]||{}).m||{})[k]||{},e={...cur,id:String(s.id),...patch};
- if(HR[d])return ref.update({m:{[k]:e}});try{await ref.update({m:{[k]:e}})}catch(x){await ref.set({date:d,m:{[k]:e}})}}
+async function hrPut(s,patch){const d=wib().date,k=seg(s.id),ref=DB.doc('hr/'+d),cu=(await ref.get())||{date:d},m={...(cu.m||{})};m[k]={...(m[k]||{}),id:String(s.id),...patch};await ref.set({...cu,date:d,m})}
 async function scan(v){const s=S.students.find(x=>String(x.id)==String(v).trim());if(!s)return toast('Data santri tidak tersedia');if(!s.active)return toast('Santri nonaktif');
  const w=wib(),e=((HR[w.date]||{}).m||{})[seg(s.id)],n=sec(w.hms);selSid=s.id;
  if(e&&e.s&&e.s!='hadir'&&!e.in){onData&&onData();return toast(s.nama+' tercatat '+ST[e.s]+' hari ini')}
@@ -456,42 +451,44 @@ function dash(){
 }
 
 /* Absensi masuk/pulang */
+let PRD={act:'',md:'',last:null,q:{}};
+try{const j=localStorage.getItem('pprm_draft');if(j)PRD.q=JSON.parse(j)||{}}catch(x){}
+const prSave=()=>{try{localStorage.setItem('pprm_draft',JSON.stringify(PRD.q))}catch(x){}};
+window.addEventListener('beforeunload',ev=>{if(Object.keys(PRD.q).length){ev.preventDefault();ev.returnValue=''}});
 function pre(){
- let last=null,md='';
- const MD=['Absensi Harian (Masuk / Pulang)',...ACTS],cm=()=>$('#am').value,hari=()=>cm()==MD[0];
- M.innerHTML=`<div class=stg><div class=row><label class=lb>Jenis absensi<select id=am>${MD.map(a=>`<option>${a}</option>`).join('')}</select></label><button id=bs></button><button id=bz></button><span class=sw id=sw></span><b class=jam id=jam style="font-size:26px;color:var(--head)"></b><span class=note id=tgl></span></div><div class=big><div><div class=bph id=bph></div><input id=idin class=bin placeholder="Scan / ketik ID PPRM lalu Enter" autocomplete=off></div><div><div class=bhd id=bhd></div><div id=bi></div></div></div><div id=ps></div></div>`;
- const btn=()=>{const a=$('#bs'),b=$('#bz');a.textContent=md=='sakit'?'🤒 Mode SAKIT aktif':'🤒 Absen Sakit';b.textContent=md=='izin'?'📝 Mode IZIN aktif':'📝 Absen Izin';a.className=md=='sakit'?'':'s';b.className=md=='izin'?'':'s'};
- const panel=()=>{const l=last,p=$('#bph'),h=$('#bhd');
+ const MD=['Absensi Harian',...ACTS];if(!MD.includes(PRD.act))PRD.act=MD[0];
+ M.innerHTML=`<div class=stg><div class=row><label class=lb>Jenis absensi<select id=am>${MD.map(a=>`<option ${a==PRD.act?'selected':''}>${esc(a)}</option>`).join('')}</select></label><button id=bs></button><button id=bz></button><span class=sw id=sw></span><b class=jam id=jam style="font-size:26px;color:var(--head)"></b><span class=note id=tgl></span></div><div class=big><div><div class=bph id=bph></div><input id=idin class=bin placeholder="Scan / ketik ID PPRM lalu Enter" autocomplete=off></div><div><div class=bhd id=bhd></div><div id=bi></div></div></div><div class=row id=sv style="margin-top:14px"></div><div id=ps></div></div>`;
+ const cm=()=>$('#am').value,hari=()=>cm()==MD[0],h5=t=>String(t||'').replace(/\./g,':').slice(0,5);
+ const btn=()=>{const a=$('#bs'),b=$('#bz');a.textContent=PRD.md=='sakit'?'🤒 Mode SAKIT aktif':'🤒 Absen Sakit';b.textContent=PRD.md=='izin'?'📝 Mode IZIN aktif':'📝 Absen Izin';a.className=PRD.md=='sakit'?'':'s';b.className=PRD.md=='izin'?'':'s'};
+ const cur=()=>{const d=wib().date,act=cm(),o={};
+  if(hari()){Object.values((HR[d]||{}).m||{}).forEach(e=>{const t=e.s=='hadir'?(e.in?'hadir':null):e.s;if(t)o[String(e.id)]={st:t,t:e.in||''}})}
+  else S.att.forEach(x=>{if(x.act==act&&x.date==d)o[String(x.sid)]={st:x.st,t:x.time||''}});
+  Object.values(PRD.q).forEach(x=>{if(x.act==act&&x.date==d)o[String(x.sid)]={st:x.st,t:x.t,p:1}});return o};
+ const panel=()=>{const l=PRD.last,p=$('#bph'),h=$('#bhd');
   if(!l){p.className='bph';p.style.backgroundImage='';p.textContent='👤';h.textContent='Siap menerima absensi';h.className='bhd';
    $('#bi').innerHTML=['Nama','ID PPRM','Kelas Madin','Kelas Formal','Ruang','Alamat','Waktu'].map(x=>`<div class=bt><small>${x}</small>–</div>`).join('');return}
   const s=l.s;p.className='bph '+l.cls;p.style.backgroundImage=s.foto?`url("${s.foto}")`:'';p.textContent=s.foto?'':(s.nama||'?')[0];h.textContent=l.txt;h.className='bhd '+l.cls;
   $('#bi').innerHTML=[['Nama',s.nama],['ID PPRM',s.id],['Kelas Madin',s.madin],['Kelas Formal',s.formal],['Ruang',s.dom],['Alamat',s.alamat],['Waktu',l.w]].map(([a,b])=>`<div class=bt><small>${a}</small>${esc(b)||'–'}</div>`).join('')};
- const draw=()=>{const w=wib();let h,sk,iz,al;
-  if(hari()){const R=rowsDay(w.date),c=k=>R.filter(r=>r.k==k).length;h=c('tepat')+c('telat');sk=c('sakit');iz=c('izin');}
-  else{const t=S.att.filter(x=>x.act==cm()&&x.date==today()),c=k=>t.filter(x=>x.st==k).length,d=new Set(t.map(x=>String(x.sid)));h=c('hadir');sk=c('sakit');iz=c('izin');}al=Math.max(0,aktif().length-h-sk-iz);
-  $('#ps').innerHTML=`<div class=bk>${[['Jumlah Murid',aktif().length],['Hadir',h],['Sakit',sk],['Izin',iz],['Alfa / Belum',al]].map(([a,b],i)=>`<div class="bc c${i}">${a}<b>${b}</b></div>`).join('')}</div><p class=note>Scan atau ketik ID: otomatis Hadir. Untuk sakit/izin, tekan tombolnya dulu lalu scan (bisa beberapa santri berturut-turut). Alfa otomatis berkurang saat santri diabsen (jumlah santri dikurangi hadir, sakit, izin).</p>`};
- const loc=(s,w,p)=>{const k=seg(s.id);if(!HR[w.date])HR[w.date]={date:w.date,m:{}};const m=HR[w.date].m=HR[w.date].m||{};m[k]={...(m[k]||{}),id:String(s.id),...p}};
- const rec=async v=>{const s=S.students.find(x=>String(x.id)==String(v).trim());if(!s)return toast('Data santri tidak tersedia');if(!s.active)return toast('Santri nonaktif');
-  const w=wib();let txt='✔ HADIR',cls='ok',wk=w.hms;
-  if(hari()){
-   const e0=((HR[w.date]||{}).m||{})[seg(s.id)];
-   if(md){const p={s:md,in:'',out:''};if(!await W(()=>hrPut(s,p),'✔ '+s.nama+': '+ST[md]))return;loc(s,w,p);txt=md=='sakit'?'🤒 SAKIT':'📝 IZIN';cls='sak';wk=ST[md]+' hari ini'}
-   else if(!e0||!e0.in){const p={s:'hadir',in:w.hms};if(!await W(()=>hrPut(s,p),'✔ '+s.nama+': Hadir'))return;loc(s,w,p);txt='✔ HADIR';cls='ok';wk='Datang jam '+w.hms.slice(0,5)}
-   else if(e0.out){txt='Sudah absen masuk & pulang';cls='late';wk='Masuk '+hm(e0.in)+' · Pulang '+hm(e0.out)}
-   else if(sec(w.hms)-sec(e0.in)<120){txt='Sudah absen masuk';cls='late';wk='Masuk '+hm(e0.in)}
-   else{const p={out:w.hms};if(!await W(()=>hrPut(s,p),'✔ '+s.nama+': Pulang'))return;loc(s,w,p);txt='✔ ABSEN PULANG';wk='Masuk '+hm(e0.in)+' · Pulang '+w.hms}
-  }else{
-   const act=cm(),date=today(),dup=S.att.some(x=>String(x.sid)==String(s.id)&&x.act==act&&x.date==date);
-   if(dup&&!md){toast(s.nama+' sudah diabsen');txt='Sudah diabsen';cls='late'}
-   else{const st=md||'hadir';if(!await W(()=>markAtt(s,act,date,st),'✔ '+s.nama+': '+ST[st]))return;
-    S.att=S.att.filter(x=>!(String(x.sid)==String(s.id)&&x.act==act&&x.date==date));S.att.push({sid:String(s.id),act,date,st,time:w.hms});
-    if(md){txt=md=='sakit'?'🤒 SAKIT':'📝 IZIN';cls='sak';wk=ST[md]}}
-  }
-  last={s,txt,cls,w:wk};panel();draw()};
+ const save=async()=>{const it=Object.entries(PRD.q);if(!it.length)return;const grp={};it.forEach(([k,x])=>{(grp[x.act+'|'+x.date]=grp[x.act+'|'+x.date]||[]).push(x)});
+  const ok=await W(async()=>{for(const [g,L] of Object.entries(grp)){const [act,date]=g.split('|');
+   if(act==MD[0]){const ref=DB.doc('hr/'+date),cu=(await ref.get())||{date},m={...(cu.m||{})};L.forEach(x=>{const k=seg(x.sid);m[k]={...(m[k]||{}),id:String(x.sid),s:x.st,in:x.st=='hadir'?x.t:'',out:''}});await ref.set({...cu,date,m});HR[date]={...(HR[date]||{}),date,m}}
+   else{const ref=DB.doc('att/'+date+'_'+ACTS.indexOf(act)),cu=(await ref.get())||{date,act},m={...(cu.m||{})};L.forEach(x=>{m[seg(x.sid)]={id:String(x.sid),s:x.st,t:x.t}});await ref.set({...cu,date,act,m});
+    S.att=S.att.filter(a=>!(a.act==act&&a.date==date&&L.some(x=>String(x.sid)==String(a.sid))));L.forEach(x=>S.att.push({sid:String(x.sid),act,date,st:x.st,time:x.t}))}}},'✔ '+it.length+' data tersimpan');
+  if(ok){PRD.q={};prSave();draw()}};
+ const draw=()=>{const v=Object.values(cur()),c=k=>v.filter(x=>x.st==k).length,h=c('hadir'),sk=c('sakit'),iz=c('izin'),n=aktif().length,np=Object.keys(PRD.q).length;
+  $('#ps').innerHTML=`<div class=bk>${[['Jumlah Murid',n],['Hadir',h],['Sakit',sk],['Izin',iz],['Alfa / Belum',Math.max(0,n-h-sk-iz)]].map(([a,b],i)=>`<div class="bc c${i}">${a}<b>${b}</b></div>`).join('')}</div><p class=note>Scan atau ketik ID: otomatis Hadir. Santri yang sudah mengabsen tidak bisa diabsen lagi. Untuk sakit/izin, tekan tombolnya dulu lalu scan. Setelah selesai, tekan Simpan. Data yang belum disimpan tidak hilang walau pindah menu.</p>`;
+  $('#sv').innerHTML=np?`<button id=bsv>💾 Simpan (${np} data belum tersimpan)</button><button class=s id=bcl>Batalkan yang belum tersimpan</button>`:'<span class=note>✔ Semua data sudah tersimpan.</span>';
+  if(np){$('#bsv').onclick=save;$('#bcl').onclick=ev=>{if(sure(ev.target,'Batalkan semua yang belum tersimpan?')){PRD.q={};prSave();draw()}}}};
+ const rec=v=>{const s=S.students.find(x=>String(x.id)==String(v).trim());if(!s)return toast('Data santri tidak tersedia');if(!s.active)return toast('Santri nonaktif');
+  const w=wib(),ex=cur()[String(s.id)];
+  if(ex&&!PRD.md){PRD.last={s,txt:'⚠ SUDAH MENGABSEN',cls:'late',w:ST[ex.st]+(ex.t?' · jam '+h5(ex.t):'')+(ex.p?' (belum disimpan)':'')};toast(s.nama+' sudah mengabsen')}
+  else{const st=PRD.md||'hadir';PRD.q[cm()+'|'+w.date+'|'+s.id]={sid:String(s.id),act:cm(),date:w.date,st,t:w.hms};prSave();
+   PRD.last={s,txt:st=='hadir'?'✔ HADIR':st=='sakit'?'🤒 SAKIT':'📝 IZIN',cls:st=='hadir'?'ok':'sak',w:st=='hadir'?'Datang jam '+w.hms.slice(0,5):ST[st]}}
+  panel();draw()};
  $('#idin').onkeydown=ev=>{if(ev.key=='Enter'){const v=ev.target.value;ev.target.value='';if(v.trim())rec(v)}};
- $('#bs').onclick=()=>{md=md=='sakit'?'':'sakit';btn();$('#idin').focus()};
- $('#bz').onclick=()=>{md=md=='izin'?'':'izin';btn();$('#idin').focus()};
- $('#am').onchange=()=>{last=null;md='';btn();panel();draw();$('#idin').focus()};
+ $('#bs').onclick=()=>{PRD.md=PRD.md=='sakit'?'':'sakit';btn();$('#idin').focus()};
+ $('#bz').onclick=()=>{PRD.md=PRD.md=='izin'?'':'izin';btn();$('#idin').focus()};
+ $('#am').onchange=()=>{PRD.act=cm();PRD.last=null;PRD.md='';btn();panel();draw();$('#idin').focus()};
  btn();tickUI();panel();draw();onData=draw;$('#idin').focus();
 }
 
@@ -582,6 +579,7 @@ function makeDB(sb){
   const doc=path=>({
     async set(d){const{error}=await sb.from(T).upsert({path,data:d,updated_at:new Date().toISOString()});if(error)throw fail(error)},
     async update(d){const{error}=await sb.rpc('merge_doc',{p_path:path,p_patch:d});if(error)throw fail(error)},
+    async get(){const{data,error}=await sb.from(T).select('data').eq('path',path).maybeSingle();if(error)throw fail(error);return data?data.data:null},
     async delete(){const{error}=await sb.from(T).delete().eq('path',path);if(error)throw fail(error)},
     onSnapshot(cb,err){
       const load=async()=>{const{data,error}=await sb.from(T).select('path,data').eq('path',path).maybeSingle();error?err&&err(fail(error)):cb(dsnap(path,data))};
